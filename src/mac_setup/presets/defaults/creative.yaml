@@ -1,0 +1,38 @@
+name: "Creative"
+description: "Media and design focused setup"
+version: 1
+author: "mac-setup"
+
+packages:
+  browsers:
+    - google-chrome
+    - arc
+  editors:
+    - cursor
+  terminals:
+    - ghostty
+  cli:
+    - git
+    - gh
+  creative:
+    - vlc
+    - figma
+    - imageoptim
+    - handbrake
+    - obs
+    - iina
+    - spotify
+    - davinci-resolve
+  productivity:
+    - hiddenbar
+    - maccy
+    - raycast
+    - rectangle
+    - shottr
+  communication:
+    - discord
+  system:
+    - appcleaner
+    - the-unarchiver
+  fonts:
+    - font-inter

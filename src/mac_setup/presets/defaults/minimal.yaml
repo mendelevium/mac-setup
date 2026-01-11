@@ -1,0 +1,28 @@
+name: "Minimal"
+description: "Essential tools for a basic macOS setup"
+version: 1
+author: "mac-setup"
+
+packages:
+  browsers:
+    - google-chrome
+  editors:
+    - visual-studio-code
+  cli:
+    - git
+    - gh
+    - neovim
+  dev_tools:
+    - lazygit
+  coding_agents:
+    - opencode
+  databases:
+    - sqlite
+  productivity:
+    - hiddenbar
+    - maccy
+  creative:
+    - vlc
+  system:
+    - appcleaner
+    - the-unarchiver

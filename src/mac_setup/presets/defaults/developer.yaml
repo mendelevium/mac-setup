@@ -1,0 +1,56 @@
+name: "Developer"
+description: "Full-stack development setup"
+version: 1
+author: "mac-setup"
+
+packages:
+  browsers:
+    - google-chrome
+    - firefox
+  editors:
+    - visual-studio-code
+    - cursor
+  terminals:
+    - iterm2
+  shells:
+    - starship
+  cli:
+    - git
+    - gh
+    - ripgrep
+    - fd
+    - bat
+    - fzf
+    - jq
+    - yq
+    - eza
+    - zoxide
+    - delta
+    - lazygit
+  dev_tools:
+    - orbstack
+    - httpie
+    - bruno
+  languages:
+    - python@3.12
+    - node
+    - bun
+  package_managers:
+    - uv
+    - nvm
+  coding_agents:
+    - claude-code
+  databases:
+    - sqlite
+    - postgresql@16
+  productivity:
+    - hiddenbar
+    - maccy
+    - bitwarden
+  creative:
+    - vlc
+  system:
+    - appcleaner
+    - the-unarchiver
+  fonts:
+    - font-fira-code

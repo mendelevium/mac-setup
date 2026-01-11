@@ -1,0 +1,151 @@
+name: All
+description: "Install all apps (not recommended)"
+version: 1
+created: '2026-01-11'
+packages:
+  browsers:
+  - google-chrome
+  - firefox
+  - brave-browser
+  - arc
+  - zen-browser
+  - orion
+  editors:
+  - visual-studio-code
+  - cursor
+  - zed
+  - jetbrains-toolbox
+  terminals:
+  - iterm2
+  - wezterm
+  - alacritty
+  - kitty
+  - warp
+  - ghostty
+  shells:
+  - zsh
+  - fish
+  - starship
+  - oh-my-posh
+  cli:
+  - git
+  - gh
+  - ripgrep
+  - fd
+  - bat
+  - fzf
+  - jq
+  - yq
+  - eza
+  - htop
+  - btop
+  - tldr
+  - zoxide
+  - direnv
+  - tmux
+  - neovim
+  - wget
+  - delta
+  - dust
+  - procs
+  - hyperfine
+  dev_tools:
+  - docker
+  - orbstack
+  - postman
+  - insomnia
+  - httpie
+  - ngrok
+  - lazygit
+  - lazydocker
+  - sourcetree
+  - bruno
+  languages:
+  - python@3.12
+  - node
+  - deno
+  - bun
+  - go
+  - rust
+  - ruby
+  - openjdk
+  package_managers:
+  - uv
+  - pipx
+  - pnpm
+  - yarn
+  - mise
+  - nvm
+  coding_agents:
+  - claude-code
+  - codex
+  - gemini-cli
+  - opencode
+  databases:
+  - sqlite
+  - postgresql@16
+  - mysql
+  - redis
+  - mongodb-community
+  - dbeaver-community
+  productivity:
+  - hiddenbar
+  - maccy
+  - raycast
+  - alfred
+  - notion
+  - obsidian
+  - affine
+  - bitwarden
+  - rectangle
+  - alt-tab
+  - meetingbar
+  - shottr
+  - amphetamine
+  communication:
+  - slack
+  - discord
+  - zoom
+  - microsoft-teams
+  - telegram
+  - signal
+  - whatsapp
+  creative:
+  - vlc
+  - figma
+  - imageoptim
+  - handbrake
+  - obs
+  - iina
+  - spotify
+  - davinci-resolve
+  cloud_devops:
+  - awscli
+  - google-cloud-sdk
+  - azure-cli
+  - terraform
+  - kubectl
+  - helm
+  - k9s
+  virtualization:
+  - utm
+  writing:
+  - pandoc
+  - texmaker
+  system:
+  - appcleaner
+  - the-unarchiver
+  - keka
+  - coconutbattery
+  - stats
+  - karabiner-elements
+  - monitorcontrol
+  security:
+  - gpg-suite
+  fonts:
+  - font-fira-code
+  - font-jetbrains-mono
+  - font-inter
+  - font-sf-mono
+  - font-cascadia-code
+  - font-monaspace
