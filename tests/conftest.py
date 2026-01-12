@@ -1,15 +1,15 @@
 """Shared pytest fixtures for mac-setup tests."""
 
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import pytest
 
 from mac_setup.models import (
     AppState,
     Category,
-    InstallMethod,
     InstalledPackage,
+    InstallMethod,
     InstallSource,
     Package,
     Preset,

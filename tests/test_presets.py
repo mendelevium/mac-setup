@@ -3,7 +3,6 @@
 from pathlib import Path
 
 import pytest
-import yaml
 
 from mac_setup.models import Preset
 from mac_setup.presets.manager import (

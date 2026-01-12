@@ -1,5 +1,6 @@
 """Base installer interface."""
 
+import subprocess
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
@@ -29,8 +30,41 @@ class InstallResult:
         return self.status in (InstallStatus.SUCCESS, InstallStatus.ALREADY_INSTALLED)
 
 
+def handle_subprocess_error(
+    package_id: str,
+    error: subprocess.TimeoutExpired | subprocess.SubprocessError,
+    operation: str = "operation",
+) -> InstallResult:
+    """Create an InstallResult from a subprocess error.
+
+    Args:
+        package_id: The package identifier
+        error: The subprocess error that occurred
+        operation: Description of the operation (e.g., "Installation", "Uninstall")
+
+    Returns:
+        InstallResult with FAILED status and appropriate message
+    """
+    if isinstance(error, subprocess.TimeoutExpired):
+        return InstallResult(
+            package_id=package_id,
+            status=InstallStatus.FAILED,
+            message=f"{operation} timed out",
+        )
+    return InstallResult(
+        package_id=package_id,
+        status=InstallStatus.FAILED,
+        message=str(error),
+    )
+
+
 class Installer(ABC):
-    """Abstract base class for package installers."""
+    """Abstract base class for package installers.
+
+    Note: Concrete implementations may extend the method signatures with
+    installer-specific parameters (e.g., InstallMethod for Homebrew, mas_id
+    for Mac App Store). Use # type: ignore[override] for these cases.
+    """
 
     @abstractmethod
     def is_available(self) -> bool:

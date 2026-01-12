@@ -3,7 +3,12 @@
 import shutil
 import subprocess
 
-from mac_setup.installers.base import Installer, InstallResult, InstallStatus
+from mac_setup.installers.base import (
+    Installer,
+    InstallResult,
+    InstallStatus,
+    handle_subprocess_error,
+)
 
 
 class MASInstaller(Installer):
@@ -96,7 +101,7 @@ class MASInstaller(Installer):
             return False
         return mas_id in self._get_installed_apps()
 
-    def install(
+    def install(  # type: ignore[override]
         self, package_id: str, mas_id: int | None = None, dry_run: bool = False
     ) -> InstallResult:
         """Install a Mac App Store app.
@@ -171,20 +176,12 @@ class MASInstaller(Installer):
                         status=InstallStatus.FAILED,
                         message=stderr or "Installation failed",
                     )
-        except subprocess.TimeoutExpired:
-            return InstallResult(
-                package_id=package_id,
-                status=InstallStatus.FAILED,
-                message="Installation timed out",
-            )
-        except subprocess.SubprocessError as e:
-            return InstallResult(
-                package_id=package_id,
-                status=InstallStatus.FAILED,
-                message=str(e),
-            )
+        except (subprocess.TimeoutExpired, subprocess.SubprocessError) as e:
+            return handle_subprocess_error(package_id, e, "Installation")
 
-    def uninstall(self, package_id: str, mas_id: int | None = None, dry_run: bool = False) -> InstallResult:
+    def uninstall(  # type: ignore[override]
+        self, package_id: str, mas_id: int | None = None, dry_run: bool = False
+    ) -> InstallResult:
         """Uninstall a Mac App Store app.
 
         Note: mas-cli cannot uninstall apps. This returns a message directing

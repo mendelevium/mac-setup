@@ -2,11 +2,8 @@
 
 from pathlib import Path
 
-import pytest
-
 from mac_setup.models import (
     InstallMethod,
-    InstalledPackage,
     InstallSource,
     Package,
 )
@@ -197,8 +194,14 @@ class TestDetectInstalledPackages:
     def test_detect_homebrew_cask(self) -> None:
         """Test detecting installed Homebrew casks."""
         catalog = [
-            Package(id="google-chrome", name="Chrome", description="Browser", method=InstallMethod.CASK),
-            Package(id="firefox", name="Firefox", description="Browser", method=InstallMethod.CASK),
+            Package(
+                id="google-chrome", name="Chrome", description="Browser",
+                method=InstallMethod.CASK
+            ),
+            Package(
+                id="firefox", name="Firefox", description="Browser",
+                method=InstallMethod.CASK
+            ),
         ]
         homebrew_installed = ["google-chrome", "iterm2"]
 
@@ -211,8 +214,13 @@ class TestDetectInstalledPackages:
     def test_detect_homebrew_formula(self) -> None:
         """Test detecting installed Homebrew formulas."""
         catalog = [
-            Package(id="git", name="Git", description="VCS", method=InstallMethod.FORMULA),
-            Package(id="ripgrep", name="ripgrep", description="Search", method=InstallMethod.FORMULA),
+            Package(
+                id="git", name="Git", description="VCS", method=InstallMethod.FORMULA
+            ),
+            Package(
+                id="ripgrep", name="ripgrep", description="Search",
+                method=InstallMethod.FORMULA
+            ),
         ]
         homebrew_installed = ["git", "fd"]
 
@@ -224,7 +232,10 @@ class TestDetectInstalledPackages:
     def test_detect_versioned_formula(self) -> None:
         """Test detecting versioned formulas like python@3.12."""
         catalog = [
-            Package(id="python@3.12", name="Python 3.12", description="Python", method=InstallMethod.FORMULA),
+            Package(
+                id="python@3.12", name="Python 3.12", description="Python",
+                method=InstallMethod.FORMULA
+            ),
         ]
         # Homebrew might list it with or without version
         homebrew_installed = ["python@3.12"]

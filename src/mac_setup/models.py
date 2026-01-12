@@ -22,7 +22,9 @@ class Package(BaseModel):
     description: str = Field(..., description="One-line description")
     method: InstallMethod = Field(default=InstallMethod.CASK, description="Installation method")
     mas_id: int | None = Field(default=None, description="Mac App Store ID for MAS apps")
-    app_name: str | None = Field(default=None, description="App name in /Applications (e.g., 'Visual Studio Code')")
+    app_name: str | None = Field(
+        default=None, description="App name in /Applications (e.g., 'Visual Studio Code')"
+    )
     default: bool = Field(default=False, description="Whether selected by default in UI")
     requires: list[str] = Field(default_factory=list, description="Package dependencies")
 
@@ -38,10 +40,7 @@ class Category(BaseModel):
 
     def get_package(self, package_id: str) -> Package | None:
         """Get a package by ID from this category."""
-        for pkg in self.packages:
-            if pkg.id == package_id:
-                return pkg
-        return None
+        return next((pkg for pkg in self.packages if pkg.id == package_id), None)
 
     def get_default_packages(self) -> list[Package]:
         """Get packages marked as default in this category."""
@@ -108,10 +107,7 @@ class AppState(BaseModel):
 
     def get_package(self, package_id: str) -> InstalledPackage | None:
         """Get an installed package by ID."""
-        for pkg in self.packages:
-            if pkg.id == package_id:
-                return pkg
-        return None
+        return next((pkg for pkg in self.packages if pkg.id == package_id), None)
 
     def add_package(self, package: InstalledPackage) -> None:
         """Add or update an installed package."""

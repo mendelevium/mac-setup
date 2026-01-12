@@ -4,7 +4,6 @@ import logging
 import sys
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
-from pathlib import Path
 
 from mac_setup.config import LOGS_DIR, ensure_directories
 

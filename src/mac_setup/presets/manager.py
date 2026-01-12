@@ -9,7 +9,6 @@ from mac_setup.config import (
     BUILTIN_PRESETS_DIR,
     PRESETS_DIR,
     ensure_directories,
-    get_all_presets,
     get_builtin_presets,
     get_user_presets,
 )

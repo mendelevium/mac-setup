@@ -2,9 +2,9 @@
 
 from mac_setup.presets.manager import (
     PresetManager,
+    list_presets,
     load_preset,
     save_preset,
-    list_presets,
     validate_preset,
 )
 

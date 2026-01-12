@@ -1,8 +1,7 @@
 """CLI commands for mac-setup."""
 
 import time
-from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.console import Console
@@ -11,8 +10,8 @@ from mac_setup import __version__, catalog
 from mac_setup.config import ensure_directories
 from mac_setup.installers import ApplicationScanner, HomebrewInstaller, MASInstaller, get_installer
 from mac_setup.installers.base import InstallResult, InstallStatus
-from mac_setup.models import InstallMethod, InstalledPackage, InstallSource, Package
-from mac_setup.presets import PresetManager, load_preset, save_preset, validate_preset
+from mac_setup.models import InstalledPackage, InstallMethod, InstallSource, Package
+from mac_setup.presets import PresetManager, load_preset, save_preset
 from mac_setup.presets.manager import PresetError, create_preset_from_selection
 from mac_setup.state import StateManager, sync_detected_packages
 from mac_setup.ui import (
@@ -43,6 +42,74 @@ from mac_setup.ui.prompts import (
     prompt_packages_to_update,
 )
 
+
+def _find_outdated_packages(
+    homebrew: HomebrewInstaller,
+    homebrew_packages: list[InstalledPackage],
+) -> tuple[list[InstalledPackage], dict[str, str | None]]:
+    """Find outdated packages and populate their version info.
+
+    Args:
+        homebrew: Homebrew installer instance
+        homebrew_packages: List of installed Homebrew packages
+
+    Returns:
+        Tuple of (outdated_packages, available_versions dict)
+    """
+    pkg_tuples = [(pkg.id, pkg.method) for pkg in homebrew_packages]
+    installed_versions = homebrew.get_versions_batch(pkg_tuples)
+    available_versions = homebrew.get_available_versions_batch(pkg_tuples)
+
+    # Update the packages with their current installed versions
+    for pkg in homebrew_packages:
+        if pkg.id in installed_versions:
+            pkg.version = installed_versions[pkg.id]
+
+    # Find outdated packages
+    outdated_packages = []
+    for pkg in homebrew_packages:
+        installed = pkg.version
+        available = available_versions.get(pkg.id)
+        if installed and available and installed != available:
+            outdated_packages.append(pkg)
+
+    return outdated_packages, available_versions
+
+
+def _filter_homebrew_packages(packages: list[InstalledPackage]) -> list[InstalledPackage]:
+    """Filter packages to only include Homebrew packages (formulas and casks).
+
+    Args:
+        packages: List of installed packages
+
+    Returns:
+        List of packages that are Homebrew formulas or casks
+    """
+    return [
+        pkg for pkg in packages
+        if pkg.method in (InstallMethod.FORMULA, InstallMethod.CASK)
+    ]
+
+
+def _confirm_action(message: str, skip_confirm: bool, cancelled_message: str = "Cancelled") -> bool:
+    """Check for user confirmation with skip option.
+
+    Args:
+        message: Confirmation message to display
+        skip_confirm: If True, skip confirmation and return True
+        cancelled_message: Message to display if user cancels
+
+    Returns:
+        True if confirmed or skipped, False if cancelled
+    """
+    if skip_confirm:
+        return True
+    if not confirm(message):
+        print_info(cancelled_message)
+        return False
+    return True
+
+
 app = typer.Typer(
     name="mac-setup",
     help="Interactive macOS Development Environment Setup",
@@ -62,7 +129,7 @@ def version_callback(value: bool) -> None:
 def main(
     ctx: typer.Context,
     version: Annotated[
-        Optional[bool],
+        bool | None,
         typer.Option("--version", "-V", callback=version_callback, is_eager=True),
     ] = None,
     dry_run: Annotated[
@@ -135,6 +202,9 @@ def run_fresh_setup(ctx: typer.Context) -> None:
 
     # Select categories
     selected_categories = prompt_category_selection(categories)
+    if selected_categories is None:
+        # User pressed 'q' to go back
+        return
     if not selected_categories:
         print_warning("No categories selected")
         return
@@ -154,6 +224,9 @@ def run_fresh_setup(ctx: typer.Context) -> None:
             continue
 
         package_ids = prompt_package_selection(cat, installed=installed_ids)
+        if package_ids is None:
+            # User pressed 'q' to go back
+            return
         if package_ids:
             all_selected_packages[cat_id] = package_ids
 
@@ -243,13 +316,16 @@ def run_browse(ctx: typer.Context) -> None:
                     installed_ids.add(pkg.id)
 
     selected_categories = prompt_category_selection(categories)
+    if selected_categories is None:
+        # User pressed 'q' to go back
+        return
 
     for cat_id in selected_categories:
-        cat = catalog.get_category(cat_id)
-        if cat:
+        cat_result = catalog.get_category(cat_id)
+        if cat_result:
             from mac_setup.ui.display import print_package_table
 
-            print_package_table(cat, installed=installed_ids)
+            print_package_table(cat_result, installed=installed_ids)
             console.print()
 
 
@@ -267,12 +343,18 @@ def run_uninstall_interactive(ctx: typer.Context) -> None:
 
     # Select packages
     selected_ids = prompt_packages_to_uninstall(all_packages)
+    if selected_ids is None:
+        # User pressed 'q' to go back
+        return
     if not selected_ids:
         print_warning("No packages selected")
         return
 
     # Select mode
     mode = prompt_uninstall_mode()
+    if mode is None:
+        # User pressed 'q' to go back
+        return
     clean = mode == UninstallMode.CLEAN
 
     # Get selected packages
@@ -281,8 +363,7 @@ def run_uninstall_interactive(ctx: typer.Context) -> None:
     # Show plan
     print_uninstall_plan(packages_to_remove, clean=clean, dry_run=dry_run)
 
-    if not skip_confirm and not confirm("Proceed with uninstall?"):
-        print_info("Uninstall cancelled")
+    if not _confirm_action("Proceed with uninstall?", skip_confirm, "Uninstall cancelled"):
         return
 
     # Run uninstall
@@ -314,13 +395,10 @@ def run_status() -> None:
     available_versions: dict[str, str | None] = {}
 
     if homebrew.is_available() and all_pkgs:
-        homebrew_packages = [
-            (pkg.id, pkg.method)
-            for pkg in all_pkgs
-            if pkg.method in (InstallMethod.FORMULA, InstallMethod.CASK)
-        ]
-        if homebrew_packages:
-            available_versions = homebrew.get_available_versions_batch(homebrew_packages)
+        homebrew_pkgs = _filter_homebrew_packages(all_pkgs)
+        if homebrew_pkgs:
+            pkg_tuples = [(pkg.id, pkg.method) for pkg in homebrew_pkgs]
+            available_versions = homebrew.get_available_versions_batch(pkg_tuples)
 
     print_status(mac_setup_pkgs, detected_pkgs, available_versions)
 
@@ -329,11 +407,11 @@ def run_status() -> None:
 def install(
     ctx: typer.Context,
     preset: Annotated[
-        Optional[str],
+        str | None,
         typer.Option("--preset", "-p", help="Preset name or path to YAML file"),
     ] = None,
     category: Annotated[
-        Optional[str],
+        str | None,
         typer.Option("--category", "-c", help="Filter by category (comma-separated)"),
     ] = None,
 ) -> None:
@@ -388,6 +466,8 @@ def browse() -> None:
 @app.command()
 def presets() -> None:
     """List available presets."""
+    from mac_setup.ui.display import print_presets_table
+
     manager = PresetManager()
     available = manager.list_available()
 
@@ -395,18 +475,7 @@ def presets() -> None:
         print_info("No presets available")
         return
 
-    from rich.table import Table
-
-    table = Table(title="Available Presets", show_header=True, header_style="bold magenta")
-    table.add_column("Name", style="cyan")
-    table.add_column("Description")
-    table.add_column("Type")
-
-    for name, desc, is_builtin in available:
-        preset_type = "[dim]built-in[/]" if is_builtin else "[green]user[/]"
-        table.add_row(name, desc, preset_type)
-
-    console.print(table)
+    print_presets_table(available)
 
 
 @app.command(name="save")
@@ -418,6 +487,9 @@ def save_command(
     categories = catalog.get_all_categories()
     selected_categories = prompt_category_selection(categories)
 
+    if selected_categories is None:
+        # User pressed 'q' to go back
+        raise typer.Exit(0)
     if not selected_categories:
         print_warning("No categories selected")
         raise typer.Exit(0)
@@ -427,6 +499,9 @@ def save_command(
         cat = catalog.get_category(cat_id)
         if cat:
             package_ids = prompt_package_selection(cat)
+            if package_ids is None:
+                # User pressed 'q' to go back
+                raise typer.Exit(0)
             if package_ids:
                 all_selected[cat_id] = package_ids
 
@@ -472,32 +547,14 @@ def update(
         raise typer.Exit(0)
 
     # Get Homebrew packages only (MAS updates not supported via this tool)
-    homebrew_packages = [
-        pkg for pkg in all_installed
-        if pkg.method in (InstallMethod.FORMULA, InstallMethod.CASK)
-    ]
+    homebrew_packages = _filter_homebrew_packages(all_installed)
 
     if not homebrew_packages:
         print_info("No Homebrew packages to update")
         raise typer.Exit(0)
 
-    # Fetch installed and available versions
-    pkg_tuples = [(pkg.id, pkg.method) for pkg in homebrew_packages]
-    installed_versions = homebrew.get_versions_batch(pkg_tuples)
-    available_versions = homebrew.get_available_versions_batch(pkg_tuples)
-
-    # Update the packages with their current installed versions
-    for pkg in homebrew_packages:
-        if pkg.id in installed_versions:
-            pkg.version = installed_versions[pkg.id]
-
     # Find outdated packages
-    outdated_packages = []
-    for pkg in homebrew_packages:
-        installed = pkg.version
-        available = available_versions.get(pkg.id)
-        if installed and available and installed != available:
-            outdated_packages.append(pkg)
+    outdated_packages, available_versions = _find_outdated_packages(homebrew, homebrew_packages)
 
     if not outdated_packages:
         print_info("All packages are up to date")
@@ -512,8 +569,8 @@ def update(
         print_info("Use --all or -a to update all outdated packages")
         raise typer.Exit(0)
 
-    if not skip_confirm and not confirm(f"Update {len(outdated_packages)} packages?"):
-        print_info("Update cancelled")
+    msg = f"Update {len(outdated_packages)} packages?"
+    if not _confirm_action(msg, skip_confirm, "Update cancelled"):
         raise typer.Exit(0)
 
     if dry_run:
@@ -544,32 +601,14 @@ def run_update_interactive(ctx: typer.Context) -> None:
         return
 
     # Get Homebrew packages only
-    homebrew_packages = [
-        pkg for pkg in all_installed
-        if pkg.method in (InstallMethod.FORMULA, InstallMethod.CASK)
-    ]
+    homebrew_packages = _filter_homebrew_packages(all_installed)
 
     if not homebrew_packages:
         print_info("No Homebrew packages to update")
         return
 
-    # Fetch installed and available versions
-    pkg_tuples = [(pkg.id, pkg.method) for pkg in homebrew_packages]
-    installed_versions = homebrew.get_versions_batch(pkg_tuples)
-    available_versions = homebrew.get_available_versions_batch(pkg_tuples)
-
-    # Update the packages with their current installed versions
-    for pkg in homebrew_packages:
-        if pkg.id in installed_versions:
-            pkg.version = installed_versions[pkg.id]
-
     # Find outdated packages
-    outdated_packages = []
-    for pkg in homebrew_packages:
-        installed = pkg.version
-        available = available_versions.get(pkg.id)
-        if installed and available and installed != available:
-            outdated_packages.append(pkg)
+    outdated_packages, available_versions = _find_outdated_packages(homebrew, homebrew_packages)
 
     if not outdated_packages:
         print_info("All packages are up to date")
@@ -579,6 +618,9 @@ def run_update_interactive(ctx: typer.Context) -> None:
     print_info(f"Found {len(outdated_packages)} outdated package(s)")
     selected_ids = prompt_packages_to_update(outdated_packages, available_versions)
 
+    if selected_ids is None:
+        # User pressed 'q' to go back
+        return
     if not selected_ids:
         print_info("No packages selected")
         return
@@ -589,8 +631,8 @@ def run_update_interactive(ctx: typer.Context) -> None:
     # Show update plan
     print_update_plan(packages_to_update, available_versions, dry_run=dry_run)
 
-    if not skip_confirm and not confirm(f"Update {len(packages_to_update)} packages?"):
-        print_info("Update cancelled")
+    msg = f"Update {len(packages_to_update)} packages?"
+    if not _confirm_action(msg, skip_confirm, "Update cancelled"):
         return
 
     if dry_run:
@@ -641,7 +683,7 @@ def _run_updates(
 def uninstall(
     ctx: typer.Context,
     packages: Annotated[
-        Optional[str],
+        str | None,
         typer.Option("--packages", "-p", help="Specific packages to uninstall (comma-separated)"),
     ] = None,
     clean: Annotated[
@@ -672,8 +714,7 @@ def uninstall(
 
     print_uninstall_plan(packages_to_remove, clean=clean, dry_run=dry_run)
 
-    if not skip_confirm and not confirm("Proceed with uninstall?"):
-        print_info("Uninstall cancelled")
+    if not _confirm_action("Proceed with uninstall?", skip_confirm, "Uninstall cancelled"):
         raise typer.Exit(0)
 
     _run_uninstallation(packages_to_remove, clean, dry_run, state_manager)
@@ -699,7 +740,8 @@ def reset(
 
     print_uninstall_plan(all_packages, clean=False, dry_run=dry_run)
 
-    if not confirm_flag and not confirm("This will uninstall all packages installed via mac-setup. Continue?", default=False):
+    msg = "This will uninstall all packages installed via mac-setup. Continue?"
+    if not confirm_flag and not confirm(msg, default=False):
         print_info("Reset cancelled")
         raise typer.Exit(0)
 
@@ -744,8 +786,8 @@ def _run_installation(
         print_info("Dry run - no changes made")
         return
 
-    if not skip_confirm and not confirm(f"Install {len(to_install)} packages?"):
-        print_info("Installation cancelled")
+    msg = f"Install {len(to_install)} packages?"
+    if not _confirm_action(msg, skip_confirm, "Installation cancelled"):
         return
 
     # Install
@@ -757,7 +799,7 @@ def _run_installation(
         for pkg in to_install:
             progress.update(pkg.name)
 
-            installer = get_installer(pkg.method)
+            get_installer(pkg.method)
 
             if pkg.method == InstallMethod.MAS:
                 # MAS installation
@@ -780,7 +822,7 @@ def _run_installation(
 
 
 def _run_uninstallation(
-    packages: list,
+    packages: list[InstalledPackage],
     clean: bool,
     dry_run: bool,
     state_manager: StateManager,

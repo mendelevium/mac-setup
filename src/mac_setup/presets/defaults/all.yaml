@@ -36,6 +36,7 @@ packages:
   - fzf
   - jq
   - yq
+  - xz
   - eza
   - htop
   - btop
@@ -45,6 +46,7 @@ packages:
   - tmux
   - neovim
   - wget
+  - w3m
   - delta
   - dust
   - procs
@@ -141,6 +143,7 @@ packages:
   - karabiner-elements
   - monitorcontrol
   security:
+  - openssl@3
   - gpg-suite
   fonts:
   - font-fira-code

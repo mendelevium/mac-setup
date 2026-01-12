@@ -9,7 +9,7 @@ description = "Interactive CLI tool for provisioning macOS machines with curated
 license = "MIT"
 requires-python = ">=3.10"
 authors = [
-    { name = "Martin" }
+    { name = "Martin Dionne" }
 ]
 keywords = ["macos", "setup", "homebrew", "cli", "automation"]
 classifiers = [
@@ -46,8 +46,8 @@ dev = [
 mac-setup = "mac_setup.cli:app"
 
 [project.urls]
-Homepage = "https://github.com/username/mac-setup"
-Repository = "https://github.com/username/mac-setup"
+Homepage = "https://github.com/mendelevium/mac-setup"
+Repository = "https://github.com/mendelevium/mac-setup"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mac_setup"]

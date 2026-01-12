@@ -2,8 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from mac_setup.installers import HomebrewInstaller, MASInstaller, get_installer
 from mac_setup.installers.base import InstallResult, InstallStatus
 from mac_setup.models import InstallMethod
@@ -165,7 +163,9 @@ class TestHomebrewInstaller:
             MagicMock(returncode=0, stdout=""),  # install
             MagicMock(returncode=0, stdout=""),  # formulas (for get_version)
             MagicMock(returncode=0, stdout="new-pkg"),  # casks (now installed)
-            MagicMock(returncode=0, stdout='{"casks":[{"token":"new-pkg","installed":"1.0"}]}'),  # info
+            MagicMock(
+                returncode=0, stdout='{"casks":[{"token":"new-pkg","installed":"1.0"}]}'
+            ),  # info
         ]
 
         installer = HomebrewInstaller()

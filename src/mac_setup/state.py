@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING
 from mac_setup.config import STATE_FILE, ensure_directories
 from mac_setup.models import (
     AppState,
-    InstallMethod,
     InstalledPackage,
+    InstallMethod,
     InstallSource,
     Package,
 )
@@ -144,6 +144,41 @@ class StateManager:
         self.save()
 
 
+def _is_package_installed(
+    pkg: Package,
+    homebrew_set: set[str],
+    mas_installed: list[int],
+    installed_apps: set[str],
+) -> bool:
+    """Check if a package is installed on the system.
+
+    Args:
+        pkg: Package to check
+        homebrew_set: Set of installed Homebrew package IDs
+        mas_installed: List of installed Mac App Store app IDs
+        installed_apps: Set of app names in /Applications
+
+    Returns:
+        True if package is installed, False otherwise
+    """
+    if pkg.method == InstallMethod.MAS:
+        return bool(pkg.mas_id and pkg.mas_id in mas_installed)
+
+    # Homebrew formula or cask - check direct match
+    if pkg.id in homebrew_set:
+        return True
+
+    # Check versioned formulas (e.g., python@3.12 -> python)
+    if "@" in pkg.id and pkg.id.split("@")[0] in homebrew_set:
+        return True
+
+    # Check /Applications folder for casks with app_name
+    if pkg.app_name and pkg.app_name in installed_apps:
+        return True
+
+    return False
+
+
 def detect_installed_packages(
     catalog_packages: list[Package],
     homebrew_installed: list[str],
@@ -170,23 +205,7 @@ def detect_installed_packages(
     installed_apps = scanner.list_installed_apps() if scanner else set()
 
     for pkg in catalog_packages:
-        is_installed = False
-
-        if pkg.method == InstallMethod.MAS:
-            if pkg.mas_id and pkg.mas_id in mas_installed:
-                is_installed = True
-        else:
-            # Homebrew formula or cask
-            if pkg.id in homebrew_set:
-                is_installed = True
-            # Check versioned formulas (e.g., python@3.12 -> python)
-            elif "@" in pkg.id and pkg.id.split("@")[0] in homebrew_set:
-                is_installed = True
-            # Check /Applications folder for casks with app_name
-            elif pkg.app_name and pkg.app_name in installed_apps:
-                is_installed = True
-
-        if is_installed:
+        if _is_package_installed(pkg, homebrew_set, mas_installed, installed_apps):
             installed.append(
                 InstalledPackage(
                     id=pkg.id,
@@ -241,7 +260,7 @@ def sync_detected_packages(
         catalog_packages, homebrew_installed, mas_installed, homebrew, scanner
     )
     detected_ids = {pkg.id for pkg in detected}
-    detected_map = {pkg.id: pkg for pkg in detected}
+    {pkg.id: pkg for pkg in detected}
 
     newly_detected: list[InstalledPackage] = []
     state_changed = False

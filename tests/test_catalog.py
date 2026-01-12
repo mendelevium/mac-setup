@@ -1,6 +1,5 @@
 """Tests for package catalog."""
 
-import pytest
 
 from mac_setup import catalog
 from mac_setup.models import InstallMethod

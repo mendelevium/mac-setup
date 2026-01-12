@@ -3,10 +3,8 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from mac_setup.installers import HomebrewInstaller
-from mac_setup.installers.base import InstallResult, InstallStatus
+from mac_setup.installers.base import InstallStatus
 from mac_setup.models import InstallMethod, InstallSource, Package
 from mac_setup.state import StateManager
 
@@ -51,7 +49,10 @@ class TestInstallationWorkflow:
             MagicMock(returncode=0, stdout=""),  # install success
             MagicMock(returncode=0, stdout=""),  # formulas (for get_version)
             MagicMock(returncode=0, stdout="new-package"),  # casks (now installed)
-            MagicMock(returncode=0, stdout='{"casks":[{"token":"new-package","installed":"2.0"}]}'),  # info
+            MagicMock(
+                returncode=0,
+                stdout='{"casks":[{"token":"new-package","installed":"2.0"}]}'
+            ),  # info
         ]
 
         installer = HomebrewInstaller()
@@ -97,7 +98,7 @@ class TestInstallationWorkflow:
 
                 assert result.status == InstallStatus.SKIPPED
                 # Verify install command was not run
-                install_calls = [
+                [
                     call for call in mock_run.call_args_list
                     if "install" in str(call)
                 ]
@@ -253,7 +254,10 @@ class TestIdempotentBehavior:
             MagicMock(returncode=0, stdout=""),  # install success
             MagicMock(returncode=0, stdout=""),  # formulas (for get_version)
             MagicMock(returncode=0, stdout="new-pkg"),  # casks (now installed)
-            MagicMock(returncode=0, stdout='{"casks":[{"token":"new-pkg","installed":"1.0"}]}'),  # info
+            MagicMock(
+                returncode=0,
+                stdout='{"casks":[{"token":"new-pkg","installed":"1.0"}]}'
+            ),  # info
         ]
 
         installer = HomebrewInstaller()

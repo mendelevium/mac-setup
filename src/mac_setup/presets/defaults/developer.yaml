@@ -23,6 +23,7 @@ packages:
     - fzf
     - jq
     - yq
+    - xz
     - eza
     - zoxide
     - delta
@@ -52,5 +53,7 @@ packages:
   system:
     - appcleaner
     - the-unarchiver
+  security:
+    - openssl@3
   fonts:
     - font-fira-code

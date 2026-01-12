@@ -6,8 +6,8 @@ from pydantic import ValidationError
 from mac_setup.models import (
     AppState,
     Category,
-    InstallMethod,
     InstalledPackage,
+    InstallMethod,
     InstallSource,
     Package,
     Preset,

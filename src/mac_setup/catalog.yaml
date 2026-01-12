@@ -1,0 +1,776 @@
+categories:
+  # ===========================================================================
+  # Browsers
+  # ===========================================================================
+  - id: browsers
+    name: Browsers
+    description: Web browsers for daily use
+    icon: "🌐"
+    packages:
+      - id: google-chrome
+        name: Google Chrome
+        description: Fast, popular, great DevTools
+        method: cask
+        app_name: Google Chrome
+        default: true
+      - id: firefox
+        name: Firefox
+        description: Privacy-focused, open source
+        method: cask
+        app_name: Firefox
+      - id: brave-browser
+        name: Brave
+        description: Privacy browser with ad blocking
+        method: cask
+        app_name: Brave Browser
+      - id: arc
+        name: Arc
+        description: Modern browser with spaces/tabs
+        method: cask
+        app_name: Arc
+      - id: zen-browser
+        name: Zen
+        description: Firefox-based, minimal UI
+        method: cask
+        app_name: Zen Browser
+      - id: orion
+        name: Orion
+        description: WebKit browser with extension support
+        method: cask
+        app_name: Orion
+
+  # ===========================================================================
+  # IDEs & Code Editors
+  # ===========================================================================
+  - id: editors
+    name: IDEs & Code Editors
+    description: Code editors and development environments
+    icon: "📝"
+    packages:
+      - id: visual-studio-code
+        name: VS Code
+        description: Popular, extensible editor
+        method: cask
+        app_name: Visual Studio Code
+        default: true
+      - id: cursor
+        name: Cursor
+        description: AI-native code editor
+        method: cask
+        app_name: Cursor
+      - id: zed
+        name: Zed
+        description: Fast, collaborative editor
+        method: cask
+        app_name: Zed
+      - id: jetbrains-toolbox
+        name: JetBrains Toolbox
+        description: Manage IntelliJ, PyCharm, etc.
+        method: cask
+        app_name: JetBrains Toolbox
+
+  # ===========================================================================
+  # Terminals
+  # ===========================================================================
+  - id: terminals
+    name: Terminals
+    description: Terminal emulators
+    icon: "💻"
+    packages:
+      - id: iterm2
+        name: iTerm2
+        description: Classic macOS terminal
+        method: cask
+        app_name: iTerm
+        default: true
+      - id: wezterm
+        name: WezTerm
+        description: GPU-accelerated, Lua config
+        method: cask
+        app_name: WezTerm
+      - id: alacritty
+        name: Alacritty
+        description: Minimal, fast terminal
+        method: cask
+        app_name: Alacritty
+      - id: kitty
+        name: Kitty
+        description: Feature-rich GPU terminal
+        method: cask
+        app_name: kitty
+      - id: warp
+        name: Warp
+        description: AI-powered modern terminal
+        method: cask
+        app_name: Warp
+      - id: ghostty
+        name: Ghostty
+        description: Native, fast terminal
+        method: cask
+        app_name: Ghostty
+
+  # ===========================================================================
+  # Shells & Prompts
+  # ===========================================================================
+  - id: shells
+    name: Shells & Prompts
+    description: Shells and prompt customization
+    icon: "🐚"
+    packages:
+      - id: zsh
+        name: Zsh
+        description: Default macOS shell (extended)
+        method: formula
+        default: true
+      - id: fish
+        name: Fish
+        description: User-friendly shell
+        method: formula
+      - id: starship
+        name: Starship
+        description: Cross-shell prompt
+        method: formula
+      - id: oh-my-posh
+        name: Oh My Posh
+        description: Prompt theme engine
+        method: formula
+
+  # ===========================================================================
+  # CLI Utilities
+  # ===========================================================================
+  - id: cli
+    name: CLI Utilities
+    description: Command-line tools and utilities
+    icon: "⌨️"
+    packages:
+      - id: git
+        name: git
+        description: Version control
+        method: formula
+        default: true
+      - id: gh
+        name: gh
+        description: GitHub from terminal
+        method: formula
+        default: true
+      - id: ripgrep
+        name: ripgrep
+        description: Fast recursive search
+        method: formula
+        default: true
+      - id: fd
+        name: fd
+        description: Fast file finder
+        method: formula
+        default: true
+      - id: bat
+        name: bat
+        description: Cat with syntax highlighting
+        method: formula
+        default: true
+      - id: fzf
+        name: fzf
+        description: Fuzzy finder
+        method: formula
+        default: true
+      - id: jq
+        name: jq
+        description: JSON processor
+        method: formula
+        default: true
+      - id: yq
+        name: yq
+        description: YAML processor
+        method: formula
+      - id: xz
+        name: xz
+        description: Compress files
+        method: formula
+      - id: eza
+        name: eza
+        description: Modern ls replacement
+        method: formula
+      - id: htop
+        name: htop
+        description: Interactive process viewer
+        method: formula
+      - id: btop
+        name: btop
+        description: Resource monitor
+        method: formula
+      - id: tldr
+        name: tldr
+        description: Simplified man pages
+        method: formula
+      - id: zoxide
+        name: zoxide
+        description: Smarter cd command
+        method: formula
+      - id: direnv
+        name: direnv
+        description: Per-directory env vars
+        method: formula
+      - id: tmux
+        name: tmux
+        description: Terminal multiplexer
+        method: formula
+      - id: neovim
+        name: neovim
+        description: Modern vim editor
+        method: formula
+      - id: wget
+        name: wget
+        description: File downloader
+        method: formula
+      - id: w3m
+        name: w3m
+        description: Text-based web browser
+        method: formula
+      - id: delta
+        name: delta
+        description: Better git diff viewer
+        method: formula
+      - id: dust
+        name: dust
+        description: Modern du replacement
+        method: formula
+      - id: procs
+        name: procs
+        description: Modern ps replacement
+        method: formula
+      - id: hyperfine
+        name: hyperfine
+        description: CLI benchmarking tool
+        method: formula
+
+  # ===========================================================================
+  # Development Tools
+  # ===========================================================================
+  - id: dev_tools
+    name: Development Tools
+    description: Tools for software development
+    icon: "🔧"
+    packages:
+      - id: docker
+        name: Docker Desktop
+        description: Containerization
+        method: cask
+        app_name: Docker
+      - id: orbstack
+        name: OrbStack
+        description: Fast Docker/Linux on Mac
+        method: cask
+        app_name: OrbStack
+      - id: postman
+        name: Postman
+        description: API development platform
+        method: cask
+        app_name: Postman
+      - id: insomnia
+        name: Insomnia
+        description: API client
+        method: cask
+        app_name: Insomnia
+      - id: httpie
+        name: HTTPie
+        description: User-friendly HTTP client
+        method: formula
+      - id: ngrok
+        name: ngrok
+        description: Secure tunnels
+        method: cask
+        app_name: ngrok
+      - id: lazygit
+        name: LazyGit
+        description: Terminal UI for git
+        method: formula
+      - id: lazydocker
+        name: LazyDocker
+        description: Terminal UI for docker
+        method: formula
+      - id: sourcetree
+        name: Sourcetree
+        description: Free Git GUI by Atlassian
+        method: cask
+        app_name: Sourcetree
+      - id: bruno
+        name: Bruno
+        description: Open-source API client
+        method: cask
+        app_name: Bruno
+
+  # ===========================================================================
+  # Languages & Runtimes
+  # ===========================================================================
+  - id: languages
+    name: Languages & Runtimes
+    description: Programming languages and runtimes
+    icon: "🗣️"
+    packages:
+      - id: python@3.12
+        name: Python 3.12
+        description: Python runtime
+        method: formula
+        default: true
+      - id: node
+        name: Node.js
+        description: JavaScript runtime
+        method: formula
+      - id: deno
+        name: Deno
+        description: JavaScript runtime
+        method: formula
+      - id: bun
+        name: Bun
+        description: Fast JS runtime & toolkit
+        method: formula
+      - id: go
+        name: Go
+        description: Go programming language
+        method: formula
+      - id: rust
+        name: Rust
+        description: Rust via rustup
+        method: formula
+      - id: ruby
+        name: Ruby
+        description: Ruby runtime
+        method: formula
+      - id: openjdk
+        name: OpenJDK
+        description: Java development kit
+        method: formula
+
+  # ===========================================================================
+  # Package & Version Managers
+  # ===========================================================================
+  - id: package_managers
+    name: Package & Version Managers
+    description: Package and version management tools
+    icon: "📦"
+    packages:
+      - id: uv
+        name: uv
+        description: Fast Python package manager
+        method: formula
+        default: true
+      - id: pipx
+        name: pipx
+        description: Install Python CLI tools in isolation
+        method: formula
+      - id: pnpm
+        name: pnpm
+        description: Fast, disk-efficient package manager
+        method: formula
+      - id: yarn
+        name: yarn
+        description: Alternative npm client
+        method: formula
+      - id: mise
+        name: mise
+        description: Universal version manager
+        method: formula
+      - id: nvm
+        name: nvm
+        description: Node Version Manager
+        method: formula
+
+  # ===========================================================================
+  # Coding Agents
+  # ===========================================================================
+  - id: coding_agents
+    name: Coding Agents
+    description: AI-powered coding assistants
+    icon: "🤖"
+    packages:
+      - id: claude-code
+        name: Claude Code
+        description: Anthropic's AI coding assistant CLI
+        method: formula
+        default: true
+      - id: codex
+        name: Codex
+        description: OpenAI's CLI coding assistant
+        method: formula
+      - id: gemini-cli
+        name: Gemini CLI
+        description: Google's AI assistant CLI
+        method: formula
+      - id: opencode
+        name: opencode
+        description: Open source AI coding assistant
+        method: formula
+
+  # ===========================================================================
+  # Databases & Data Tools
+  # ===========================================================================
+  - id: databases
+    name: Databases & Data Tools
+    description: Databases and data management tools
+    icon: "🗃️"
+    packages:
+      - id: sqlite
+        name: SQLite
+        description: Embedded database
+        method: formula
+        default: true
+      - id: postgresql@16
+        name: PostgreSQL
+        description: Relational database
+        method: formula
+      - id: mysql
+        name: MySQL
+        description: Relational database
+        method: formula
+      - id: redis
+        name: Redis
+        description: In-memory data store
+        method: formula
+      - id: mongodb-community
+        name: MongoDB
+        description: Document database
+        method: formula
+      - id: dbeaver-community
+        name: DBeaver
+        description: Universal DB client
+        method: cask
+        app_name: DBeaver
+
+  # ===========================================================================
+  # Productivity
+  # ===========================================================================
+  - id: productivity
+    name: Productivity
+    description: Productivity and utility apps
+    icon: "⚡"
+    packages:
+      - id: hiddenbar
+        name: Hidden Bar
+        description: Hide menu bar icons
+        method: cask
+        app_name: Hidden Bar
+        default: true
+      - id: maccy
+        name: Maccy
+        description: Clipboard manager
+        method: cask
+        app_name: Maccy
+        default: true
+      - id: raycast
+        name: Raycast
+        description: Launcher & productivity tool
+        method: cask
+        app_name: Raycast
+      - id: alfred
+        name: Alfred
+        description: Powerful launcher
+        method: cask
+        app_name: Alfred 5
+      - id: notion
+        name: Notion
+        description: Notes & workspace
+        method: cask
+        app_name: Notion
+      - id: obsidian
+        name: Obsidian
+        description: Markdown knowledge base
+        method: cask
+        app_name: Obsidian
+      - id: affine
+        name: Affine
+        description: Open source Markdown knowledge base
+        method: cask
+        app_name: AFFiNE
+      - id: bitwarden
+        name: Bitwarden
+        description: Open source password manager
+        method: cask
+        app_name: Bitwarden
+      - id: rectangle
+        name: Rectangle
+        description: Window management
+        method: cask
+        app_name: Rectangle
+      - id: alt-tab
+        name: AltTab
+        description: Windows-style alt-tab
+        method: cask
+        app_name: AltTab
+      - id: meetingbar
+        name: MeetingBar
+        description: Calendar in menu bar
+        method: cask
+        app_name: MeetingBar
+      - id: shottr
+        name: Shottr
+        description: Free screenshot tool with annotations
+        method: cask
+        app_name: Shottr
+      - id: amphetamine
+        name: Amphetamine
+        description: Keep Mac awake
+        method: mas
+        mas_id: 937984704
+
+  # ===========================================================================
+  # Communication
+  # ===========================================================================
+  - id: communication
+    name: Communication
+    description: Communication and messaging apps
+    icon: "💬"
+    packages:
+      - id: slack
+        name: Slack
+        description: Team messaging
+        method: cask
+        app_name: Slack
+      - id: discord
+        name: Discord
+        description: Community chat
+        method: cask
+        app_name: Discord
+      - id: zoom
+        name: Zoom
+        description: Video conferencing
+        method: cask
+        app_name: zoom.us
+      - id: microsoft-teams
+        name: Microsoft Teams
+        description: Enterprise communication
+        method: cask
+        app_name: Microsoft Teams
+      - id: telegram
+        name: Telegram
+        description: Messaging app
+        method: cask
+        app_name: Telegram
+      - id: signal
+        name: Signal
+        description: Private messaging
+        method: cask
+        app_name: Signal
+      - id: whatsapp
+        name: WhatsApp
+        description: Popular messenger
+        method: cask
+        app_name: WhatsApp
+
+  # ===========================================================================
+  # Design & Creative
+  # ===========================================================================
+  - id: creative
+    name: Design & Creative
+    description: Design, media, and creative tools
+    icon: "🎨"
+    packages:
+      - id: vlc
+        name: VLC
+        description: Media player
+        method: cask
+        app_name: VLC
+        default: true
+      - id: figma
+        name: Figma
+        description: Collaborative design
+        method: cask
+        app_name: Figma
+      - id: imageoptim
+        name: ImageOptim
+        description: Image compression
+        method: cask
+        app_name: ImageOptim
+      - id: handbrake
+        name: HandBrake
+        description: Video transcoder
+        method: cask
+        app_name: HandBrake
+      - id: obs
+        name: OBS Studio
+        description: Streaming/recording
+        method: cask
+        app_name: OBS
+      - id: iina
+        name: IINA
+        description: Modern media player
+        method: cask
+        app_name: IINA
+      - id: spotify
+        name: Spotify
+        description: Music streaming
+        method: cask
+        app_name: Spotify
+      - id: davinci-resolve
+        name: DaVinci Resolve
+        description: Free professional video editor
+        method: cask
+        app_name: DaVinci Resolve
+
+  # ===========================================================================
+  # Cloud & DevOps
+  # ===========================================================================
+  - id: cloud_devops
+    name: Cloud & DevOps
+    description: Cloud CLI tools and DevOps utilities
+    icon: "☁️"
+    packages:
+      - id: awscli
+        name: AWS CLI
+        description: Amazon Web Services CLI
+        method: formula
+      - id: google-cloud-sdk
+        name: Google Cloud SDK
+        description: GCP CLI tools
+        method: cask
+        app_name: Google Cloud SDK
+      - id: azure-cli
+        name: Azure CLI
+        description: Microsoft Azure CLI
+        method: formula
+      - id: terraform
+        name: Terraform
+        description: Infrastructure as code
+        method: formula
+      - id: kubectl
+        name: kubectl
+        description: Kubernetes CLI
+        method: formula
+      - id: helm
+        name: Helm
+        description: Kubernetes package manager
+        method: formula
+      - id: k9s
+        name: K9s
+        description: Kubernetes TUI
+        method: formula
+
+  # ===========================================================================
+  # Virtualization
+  # ===========================================================================
+  - id: virtualization
+    name: Virtualization
+    description: Virtual machine and container tools
+    icon: "🖥️"
+    packages:
+      - id: utm
+        name: UTM
+        description: macOS virtualization
+        method: cask
+        app_name: UTM
+
+  # ===========================================================================
+  # Writing & Documents
+  # ===========================================================================
+  - id: writing
+    name: Writing & Documents
+    description: Document and writing tools
+    icon: "✍️"
+    packages:
+      - id: pandoc
+        name: Pandoc
+        description: Document converter
+        method: formula
+      - id: texmaker
+        name: Texmaker
+        description: LaTeX editor
+        method: cask
+        app_name: Texmaker
+
+  # ===========================================================================
+  # System Utilities
+  # ===========================================================================
+  - id: system
+    name: System Utilities
+    description: System maintenance and utility apps
+    icon: "🛠️"
+    packages:
+      - id: appcleaner
+        name: AppCleaner
+        description: Clean app uninstalls
+        method: cask
+        app_name: AppCleaner
+        default: true
+      - id: the-unarchiver
+        name: The Unarchiver
+        description: Archive extraction
+        method: cask
+        app_name: The Unarchiver
+        default: true
+      - id: keka
+        name: Keka
+        description: File archiver
+        method: cask
+        app_name: Keka
+      - id: coconutbattery
+        name: CoconutBattery
+        description: Battery health
+        method: cask
+        app_name: coconutBattery
+      - id: stats
+        name: Stats
+        description: System monitor in menubar
+        method: cask
+        app_name: Stats
+      - id: karabiner-elements
+        name: Karabiner
+        description: Keyboard customization
+        method: cask
+        app_name: Karabiner-Elements
+      - id: monitorcontrol
+        name: MonitorControl
+        description: External display brightness
+        method: cask
+        app_name: MonitorControl
+
+  # ===========================================================================
+  # Security
+  # ===========================================================================
+  - id: security
+    name: Security
+    description: Security and privacy tools
+    icon: "🔒"
+    packages:
+      - id: openssl@3
+        name: OpenSSL 3
+        description: Cryptographic toolkit
+        method: formula
+        default: true
+      - id: gpg-suite
+        name: GPG Suite
+        description: GPG encryption tools
+        method: cask
+        app_name: GPG Keychain
+
+  # ===========================================================================
+  # Fonts
+  # ===========================================================================
+  - id: fonts
+    name: Fonts
+    description: Developer and UI fonts
+    icon: "🔤"
+    packages:
+      - id: font-fira-code
+        name: Fira Code
+        description: Monospace with ligatures
+        method: cask
+        default: true
+      - id: font-jetbrains-mono
+        name: JetBrains Mono
+        description: Developer font
+        method: cask
+      - id: font-inter
+        name: Inter
+        description: UI typeface
+        method: cask
+      - id: font-sf-mono
+        name: SF Mono
+        description: Apple's monospace
+        method: cask
+      - id: font-cascadia-code
+        name: Cascadia Code
+        description: Microsoft's dev font
+        method: cask
+      - id: font-monaspace
+        name: Monaspace
+        description: GitHub's font superfamily
+        method: cask

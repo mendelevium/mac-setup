@@ -4,7 +4,12 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from mac_setup.installers.base import Installer, InstallResult, InstallStatus
+from mac_setup.installers.base import (
+    Installer,
+    InstallResult,
+    InstallStatus,
+    handle_subprocess_error,
+)
 from mac_setup.models import InstallMethod
 
 
@@ -25,6 +30,11 @@ class HomebrewInstaller(Installer):
         self._brew_path: str | None = None
         self._installed_formulas: set[str] | None = None
         self._installed_casks: set[str] | None = None
+
+    def _invalidate_cache(self) -> None:
+        """Invalidate the installed packages cache."""
+        self._installed_formulas = None
+        self._installed_casks = None
 
     @property
     def brew_path(self) -> str | None:
@@ -121,7 +131,7 @@ class HomebrewInstaller(Installer):
 
         return False
 
-    def install(
+    def install(  # type: ignore[override]
         self, package_id: str, method: InstallMethod = InstallMethod.CASK, dry_run: bool = False
     ) -> InstallResult:
         """Install a Homebrew package.
@@ -162,9 +172,7 @@ class HomebrewInstaller(Installer):
             else:
                 result = self._run_brew("install", "--cask", package_id)
 
-            # Invalidate cache after install
-            self._installed_formulas = None
-            self._installed_casks = None
+            self._invalidate_cache()
 
             if result.returncode == 0:
                 version = self.get_version(package_id, method)
@@ -180,20 +188,10 @@ class HomebrewInstaller(Installer):
                     status=InstallStatus.FAILED,
                     message=result.stderr or "Installation failed",
                 )
-        except subprocess.TimeoutExpired:
-            return InstallResult(
-                package_id=package_id,
-                status=InstallStatus.FAILED,
-                message="Installation timed out",
-            )
-        except subprocess.SubprocessError as e:
-            return InstallResult(
-                package_id=package_id,
-                status=InstallStatus.FAILED,
-                message=str(e),
-            )
+        except (subprocess.TimeoutExpired, subprocess.SubprocessError) as e:
+            return handle_subprocess_error(package_id, e, "Installation")
 
-    def uninstall(
+    def uninstall(  # type: ignore[override]
         self,
         package_id: str,
         method: InstallMethod = InstallMethod.CASK,
@@ -238,9 +236,7 @@ class HomebrewInstaller(Installer):
             else:
                 result = self._run_brew("uninstall", "--cask", package_id)
 
-            # Invalidate cache after uninstall
-            self._installed_formulas = None
-            self._installed_casks = None
+            self._invalidate_cache()
 
             if result.returncode == 0:
                 # Perform clean uninstall if requested
@@ -258,18 +254,8 @@ class HomebrewInstaller(Installer):
                     status=InstallStatus.FAILED,
                     message=result.stderr or "Uninstallation failed",
                 )
-        except subprocess.TimeoutExpired:
-            return InstallResult(
-                package_id=package_id,
-                status=InstallStatus.FAILED,
-                message="Uninstallation timed out",
-            )
-        except subprocess.SubprocessError as e:
-            return InstallResult(
-                package_id=package_id,
-                status=InstallStatus.FAILED,
-                message=str(e),
-            )
+        except (subprocess.TimeoutExpired, subprocess.SubprocessError) as e:
+            return handle_subprocess_error(package_id, e, "Uninstallation")
 
     def update(
         self,
@@ -314,9 +300,7 @@ class HomebrewInstaller(Installer):
             else:
                 result = self._run_brew("upgrade", "--cask", package_id)
 
-            # Invalidate cache after update
-            self._installed_formulas = None
-            self._installed_casks = None
+            self._invalidate_cache()
 
             if result.returncode == 0:
                 version = self.get_version(package_id, method)
@@ -340,18 +324,8 @@ class HomebrewInstaller(Installer):
                     status=InstallStatus.FAILED,
                     message=result.stderr or "Update failed",
                 )
-        except subprocess.TimeoutExpired:
-            return InstallResult(
-                package_id=package_id,
-                status=InstallStatus.FAILED,
-                message="Update timed out",
-            )
-        except subprocess.SubprocessError as e:
-            return InstallResult(
-                package_id=package_id,
-                status=InstallStatus.FAILED,
-                message=str(e),
-            )
+        except (subprocess.TimeoutExpired, subprocess.SubprocessError) as e:
+            return handle_subprocess_error(package_id, e, "Update")
 
     def list_installed(self, method: InstallMethod | None = None) -> list[str]:
         """List installed Homebrew packages.
@@ -372,7 +346,9 @@ class HomebrewInstaller(Installer):
         else:
             return sorted(self._get_installed_set(method))
 
-    def get_version(self, package_id: str, method: InstallMethod = InstallMethod.CASK) -> str | None:
+    def get_version(
+        self, package_id: str, method: InstallMethod = InstallMethod.CASK
+    ) -> str | None:
         """Get the installed version of a package."""
         if not self.is_available() or not self.is_installed(package_id, method):
             return None
@@ -386,11 +362,13 @@ class HomebrewInstaller(Installer):
                 if method == InstallMethod.FORMULA and data.get("formulae"):
                     formula = data["formulae"][0]
                     if formula.get("installed"):
-                        return formula["installed"][0].get("version")
+                        version: str | None = formula["installed"][0].get("version")
+                        return version
                 elif method == InstallMethod.CASK and data.get("casks"):
                     cask = data["casks"][0]
                     # Fallback to available version if installed is not set
-                    return cask.get("installed") or cask.get("version")
+                    cask_version: str | None = cask.get("installed") or cask.get("version")
+                    return cask_version
         except (subprocess.SubprocessError, json.JSONDecodeError, KeyError, IndexError):
             pass
 

@@ -1,11 +1,10 @@
 """Progress tracking and display using Rich."""
 
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator
+from enum import Enum
 
 from rich.console import Console
-from rich.live import Live
-from rich.panel import Panel
 from rich.progress import (
     BarColumn,
     MofNCompleteColumn,
@@ -15,12 +14,88 @@ from rich.progress import (
     TextColumn,
     TimeElapsedColumn,
 )
-from rich.table import Table
-from rich.text import Text
 
 from mac_setup.installers.base import InstallResult, InstallStatus
 
 console = Console()
+
+
+class OperationType(str, Enum):
+    """Type of package operation."""
+
+    INSTALL = "install"
+    UNINSTALL = "uninstall"
+    UPDATE = "update"
+
+
+# Configuration for each operation type
+_OPERATION_CONFIG = {
+    OperationType.INSTALL: {
+        "color": "blue",
+        "verb": "Installing",
+        "noun": "Installing packages...",
+    },
+    OperationType.UNINSTALL: {
+        "color": "red",
+        "verb": "Uninstalling",
+        "noun": "Uninstalling packages...",
+    },
+    OperationType.UPDATE: {
+        "color": "yellow",
+        "verb": "Updating",
+        "noun": "Updating packages...",
+    },
+}
+
+
+def _create_progress_bar(color: str) -> Progress:
+    """Create a progress bar with the given color.
+
+    Args:
+        color: Rich color name for the progress bar
+
+    Returns:
+        Configured Progress instance
+    """
+    return Progress(
+        SpinnerColumn(),
+        TextColumn(f"[bold {color}]{{task.description}}"),
+        BarColumn(complete_style=color, finished_style=color),
+        MofNCompleteColumn(),
+        TimeElapsedColumn(),
+        console=console,
+    )
+
+
+def _format_result_status(
+    result: InstallResult,
+    operation: OperationType,
+    cleaned: bool = False,
+) -> str:
+    """Format a result status message for display.
+
+    Args:
+        result: The operation result
+        operation: Type of operation
+        cleaned: Whether clean uninstall was performed (uninstall only)
+
+    Returns:
+        Formatted status string with Rich markup
+    """
+    if result.status == InstallStatus.SUCCESS:
+        if operation == OperationType.UPDATE and result.version:
+            return f"  [green]✓[/] {result.package_id} -> {result.version}"
+        elif operation == OperationType.UNINSTALL and cleaned:
+            return f"  [green]✓[/] {result.package_id} (cleaned)"
+        return f"  [green]✓[/] {result.package_id}"
+    elif result.status == InstallStatus.ALREADY_INSTALLED:
+        if operation == OperationType.UPDATE:
+            return f"  [blue]○[/] {result.package_id} (already up to date)"
+        return f"  [blue]○[/] {result.package_id} (already installed)"
+    elif result.status == InstallStatus.SKIPPED:
+        return f"  [yellow]○[/] {result.package_id} (skipped)"
+    else:
+        return f"  [red]✗[/] {result.package_id}: {result.message}"
 
 
 class InstallProgress:
@@ -37,22 +112,16 @@ class InstallProgress:
         self.completed: list[InstallResult] = []
         self.current_package: str | None = None
 
-        # Progress bar
-        self._progress = Progress(
-            SpinnerColumn(),
-            TextColumn("[bold blue]{task.description}"),
-            BarColumn(complete_style="green", finished_style="green"),
-            MofNCompleteColumn(),
-            TimeElapsedColumn(),
-            console=console,
-        )
+        config = _OPERATION_CONFIG[OperationType.INSTALL]
+        self._progress = _create_progress_bar(config["color"])
+        self._config = config
         self._task_id: TaskID | None = None
 
     def start(self) -> None:
         """Start the progress display."""
         self._progress.start()
         self._task_id = self._progress.add_task(
-            "Installing packages...",
+            self._config["noun"],
             total=self.total,
         )
 
@@ -70,7 +139,7 @@ class InstallProgress:
         if self._task_id is not None:
             self._progress.update(
                 self._task_id,
-                description=f"Installing {package_name}...",
+                description=f"{self._config['verb']} {package_name}...",
             )
 
     def complete_package(self, result: InstallResult) -> None:
@@ -88,15 +157,7 @@ class InstallProgress:
                 completed=self.current,
             )
 
-        # Print status
-        if result.status == InstallStatus.SUCCESS:
-            console.print(f"  [green]✓[/] {result.package_id}")
-        elif result.status == InstallStatus.ALREADY_INSTALLED:
-            console.print(f"  [blue]○[/] {result.package_id} (already installed)")
-        elif result.status == InstallStatus.SKIPPED:
-            console.print(f"  [yellow]○[/] {result.package_id} (skipped)")
-        else:
-            console.print(f"  [red]✗[/] {result.package_id}: {result.message}")
+        console.print(_format_result_status(result, OperationType.INSTALL))
 
     @property
     def success_count(self) -> int:
@@ -148,21 +209,16 @@ class UninstallProgress:
         self.current = 0
         self.completed: list[InstallResult] = []
 
-        self._progress = Progress(
-            SpinnerColumn(),
-            TextColumn("[bold red]{task.description}"),
-            BarColumn(complete_style="red", finished_style="red"),
-            MofNCompleteColumn(),
-            TimeElapsedColumn(),
-            console=console,
-        )
+        config = _OPERATION_CONFIG[OperationType.UNINSTALL]
+        self._progress = _create_progress_bar(config["color"])
+        self._config = config
         self._task_id: TaskID | None = None
 
     def start(self) -> None:
         """Start the progress display."""
         self._progress.start()
         self._task_id = self._progress.add_task(
-            "Uninstalling packages...",
+            self._config["noun"],
             total=self.total,
         )
 
@@ -175,7 +231,7 @@ class UninstallProgress:
         if self._task_id is not None:
             self._progress.update(
                 self._task_id,
-                description=f"Uninstalling {package_name}...",
+                description=f"{self._config['verb']} {package_name}...",
             )
 
     def complete_package(self, result: InstallResult, cleaned: bool = False) -> None:
@@ -186,13 +242,7 @@ class UninstallProgress:
         if self._task_id is not None:
             self._progress.update(self._task_id, completed=self.current)
 
-        suffix = " (cleaned)" if cleaned else ""
-        if result.status == InstallStatus.SUCCESS:
-            console.print(f"  [green]✓[/] {result.package_id}{suffix}")
-        elif result.status == InstallStatus.SKIPPED:
-            console.print(f"  [yellow]○[/] {result.package_id} (skipped)")
-        else:
-            console.print(f"  [red]✗[/] {result.package_id}: {result.message}")
+        console.print(_format_result_status(result, OperationType.UNINSTALL, cleaned))
 
 
 @contextmanager
@@ -226,21 +276,16 @@ class UpdateProgress:
         self.current = 0
         self.completed: list[InstallResult] = []
 
-        self._progress = Progress(
-            SpinnerColumn(),
-            TextColumn("[bold yellow]{task.description}"),
-            BarColumn(complete_style="yellow", finished_style="yellow"),
-            MofNCompleteColumn(),
-            TimeElapsedColumn(),
-            console=console,
-        )
+        config = _OPERATION_CONFIG[OperationType.UPDATE]
+        self._progress = _create_progress_bar(config["color"])
+        self._config = config
         self._task_id: TaskID | None = None
 
     def start(self) -> None:
         """Start the progress display."""
         self._progress.start()
         self._task_id = self._progress.add_task(
-            "Updating packages...",
+            self._config["noun"],
             total=self.total,
         )
 
@@ -253,7 +298,7 @@ class UpdateProgress:
         if self._task_id is not None:
             self._progress.update(
                 self._task_id,
-                description=f"Updating {package_name}...",
+                description=f"{self._config['verb']} {package_name}...",
             )
 
     def complete_package(self, result: InstallResult) -> None:
@@ -264,15 +309,7 @@ class UpdateProgress:
         if self._task_id is not None:
             self._progress.update(self._task_id, completed=self.current)
 
-        if result.status == InstallStatus.SUCCESS:
-            version_info = f" -> {result.version}" if result.version else ""
-            console.print(f"  [green]✓[/] {result.package_id}{version_info}")
-        elif result.status == InstallStatus.ALREADY_INSTALLED:
-            console.print(f"  [blue]○[/] {result.package_id} (already up to date)")
-        elif result.status == InstallStatus.SKIPPED:
-            console.print(f"  [yellow]○[/] {result.package_id} (skipped)")
-        else:
-            console.print(f"  [red]✗[/] {result.package_id}: {result.message}")
+        console.print(_format_result_status(result, OperationType.UPDATE))
 
 
 @contextmanager

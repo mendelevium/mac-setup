@@ -1,11 +1,50 @@
 """Interactive prompts using questionary."""
 
 from enum import Enum
+from typing import Any
 
 import questionary
+from prompt_toolkit.key_binding import KeyBindings
 from questionary import Style
 
-from mac_setup.models import Category, InstalledPackage, Package
+from mac_setup.models import Category, InstalledPackage
+
+# Instruction strings for prompts
+_CHECKBOX_INSTRUCTIONS = "(Space=toggle, A=all, I=invert, Enter=confirm, Esc=back)"
+_CHECKBOX_SIMPLE_INSTRUCTIONS = "(Space=toggle, Enter=confirm, Esc=back)"
+_SELECT_INSTRUCTIONS = "(Arrows=move, Enter=select, Esc=back)"
+
+
+def _add_escape_binding(question: questionary.Question) -> questionary.Question:
+    """Add Escape key binding to a questionary prompt to go back."""
+    # Get the application and add escape binding
+    original_ask = question.ask
+
+    def ask_with_escape(*args: Any, **kwargs: Any) -> Any:
+        # Create escape key binding
+        kb = KeyBindings()
+
+        @kb.add("escape")
+        def _(event: Any) -> None:
+            event.app.exit(result=None)
+
+        # Patch the application's key bindings
+        app = question.application
+        if hasattr(app, "key_bindings") and app.key_bindings:
+            from prompt_toolkit.key_binding import merge_key_bindings
+
+            app.key_bindings = merge_key_bindings([app.key_bindings, kb])
+        else:
+            app.key_bindings = kb
+
+        # Reduce escape key delay for faster responsiveness (default is ~100ms)
+        app.ttimeoutlen = 0.05
+
+        return original_ask(*args, **kwargs)
+
+    question.ask = ask_with_escape  # type: ignore[method-assign]
+    return question
+
 
 # Custom style for prompts
 custom_style = Style(
@@ -92,7 +131,7 @@ def prompt_main_menu() -> MainMenuChoice:
 def prompt_category_selection(
     categories: list[Category],
     preselected: set[str] | None = None,
-) -> list[str]:
+) -> list[str] | None:
     """Prompt user to select categories.
 
     Args:
@@ -100,7 +139,7 @@ def prompt_category_selection(
         preselected: Set of category IDs to pre-select
 
     Returns:
-        List of selected category IDs
+        List of selected category IDs, or None if user pressed Esc to go back
     """
     choices = []
     for cat in categories:
@@ -113,21 +152,22 @@ def prompt_category_selection(
             )
         )
 
-    result = questionary.checkbox(
+    question = questionary.checkbox(
         "Select categories to browse:",
         choices=choices,
         style=custom_style,
-        instruction="(Space to toggle, A to toggle all, I to invert, Enter to confirm)",
-    ).ask()
+        instruction=_CHECKBOX_INSTRUCTIONS,
+    )
+    result = _add_escape_binding(question).ask()
 
-    return result or []
+    return result if result is not None else None
 
 
 def prompt_package_selection(
     category: Category,
     preselected: set[str] | None = None,
     installed: set[str] | None = None,
-) -> list[str]:
+) -> list[str] | None:
     """Prompt user to select packages from a category.
 
     Args:
@@ -136,7 +176,7 @@ def prompt_package_selection(
         installed: Set of already installed package IDs
 
     Returns:
-        List of selected package IDs
+        List of selected package IDs, or None if user pressed Esc to go back
     """
     choices = []
     for pkg in category.packages:
@@ -159,26 +199,27 @@ def prompt_package_selection(
             )
         )
 
-    result = questionary.checkbox(
+    question = questionary.checkbox(
         f"Select packages from {category.name}:",
         choices=choices,
         style=custom_style,
-        instruction="(Space to toggle, A to toggle all, I to invert, Enter to confirm)",
-    ).ask()
+        instruction=_CHECKBOX_INSTRUCTIONS,
+    )
+    result = _add_escape_binding(question).ask()
 
-    return result or []
+    return result if result is not None else None
 
 
 def prompt_packages_to_uninstall(
     packages: list[InstalledPackage],
-) -> list[str]:
+) -> list[str] | None:
     """Prompt user to select packages to uninstall.
 
     Args:
         packages: List of installed packages
 
     Returns:
-        List of selected package IDs
+        List of selected package IDs, or None if user pressed Esc to go back
     """
     choices = []
     for pkg in packages:
@@ -189,20 +230,21 @@ def prompt_packages_to_uninstall(
             )
         )
 
-    result = questionary.checkbox(
+    question = questionary.checkbox(
         "Select packages to uninstall:",
         choices=choices,
         style=custom_style,
-        instruction="(Space to toggle, Enter to confirm)",
-    ).ask()
+        instruction=_CHECKBOX_SIMPLE_INSTRUCTIONS,
+    )
+    result = _add_escape_binding(question).ask()
 
-    return result or []
+    return result if result is not None else None
 
 
 def prompt_packages_to_update(
     packages: list[InstalledPackage],
     available_versions: dict[str, str | None],
-) -> list[str]:
+) -> list[str] | None:
     """Prompt user to select packages to update.
 
     Args:
@@ -210,7 +252,7 @@ def prompt_packages_to_update(
         available_versions: Dict mapping package_id to available version
 
     Returns:
-        List of selected package IDs
+        List of selected package IDs, or None if user pressed Esc to go back
     """
     choices = []
     for pkg in packages:
@@ -224,14 +266,15 @@ def prompt_packages_to_update(
             )
         )
 
-    result = questionary.checkbox(
+    question = questionary.checkbox(
         "Select packages to update:",
         choices=choices,
         style=custom_style,
-        instruction="(Space to toggle, A=all, I=invert, Enter to confirm)",
-    ).ask()
+        instruction=_CHECKBOX_INSTRUCTIONS,
+    )
+    result = _add_escape_binding(question).ask()
 
-    return result or []
+    return result if result is not None else None
 
 
 def prompt_preset_selection(presets: list[tuple[str, str]]) -> str | None:
@@ -241,7 +284,7 @@ def prompt_preset_selection(presets: list[tuple[str, str]]) -> str | None:
         presets: List of (name, description) tuples
 
     Returns:
-        Selected preset name, or None if cancelled
+        Selected preset name, or None if cancelled or user pressed Esc to go back
     """
     choices = [
         questionary.Choice(
@@ -251,13 +294,15 @@ def prompt_preset_selection(presets: list[tuple[str, str]]) -> str | None:
         for name, desc in presets
     ]
 
-    result = questionary.select(
+    question = questionary.select(
         "Select a preset:",
         choices=choices,
         style=custom_style,
-    ).ask()
+        instruction=_SELECT_INSTRUCTIONS,
+    )
+    result = _add_escape_binding(question).ask()
 
-    return result
+    return str(result) if result is not None else None
 
 
 def prompt_preset_name() -> str | None:
@@ -275,11 +320,11 @@ def prompt_preset_name() -> str | None:
     return result.strip() if result else None
 
 
-def prompt_uninstall_mode() -> UninstallMode:
+def prompt_uninstall_mode() -> UninstallMode | None:
     """Prompt user to select uninstall mode.
 
     Returns:
-        The selected uninstall mode
+        The selected uninstall mode, or None if user pressed Esc to go back
     """
     choices = [
         questionary.Choice(
@@ -292,13 +337,15 @@ def prompt_uninstall_mode() -> UninstallMode:
         ),
     ]
 
-    result = questionary.select(
+    question = questionary.select(
         "Select uninstall mode:",
         choices=choices,
         style=custom_style,
-    ).ask()
+        instruction=_SELECT_INSTRUCTIONS,
+    )
+    result = _add_escape_binding(question).ask()
 
-    return result or UninstallMode.STANDARD
+    return UninstallMode(result) if result is not None else None
 
 
 def confirm(message: str, default: bool = True) -> bool:
@@ -336,4 +383,4 @@ def prompt_text(message: str, default: str = "") -> str | None:
         style=custom_style,
     ).ask()
 
-    return result
+    return str(result) if result is not None else None

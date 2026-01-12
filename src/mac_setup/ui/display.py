@@ -215,7 +215,9 @@ def print_uninstall_plan(
     console.print(f"\n[bold]Total:[/] {len(packages)} packages")
 
     if clean:
-        console.print("\n[yellow]Note:[/] Clean uninstall will also remove settings, caches, and data")
+        console.print(
+            "\n[yellow]Note:[/] Clean uninstall will also remove settings, caches, and data"
+        )
 
 
 def print_update_plan(
@@ -273,10 +275,11 @@ def print_summary(
 
     # Build summary text
     lines = []
+    action = "installed" if "Install" in operation else "removed"
     if success_count > 0:
-        lines.append(f"[green]✓[/] {success_count} packages {'installed' if 'Install' in operation else 'removed'} successfully")
+        lines.append(f"[green]✓[/] {success_count} packages {action} successfully")
     if already_count > 0:
-        lines.append(f"[blue]○[/] {already_count} packages already {'installed' if 'Install' in operation else 'removed'}")
+        lines.append(f"[blue]○[/] {already_count} packages already {action}")
     if skipped_count > 0:
         lines.append(f"[yellow]○[/] {skipped_count} packages skipped")
     if failed_count > 0:
@@ -339,3 +342,21 @@ def print_status(
         console.print("[dim]No tracked packages found[/]")
     else:
         console.print(f"[bold]Total tracked packages:[/] {total}")
+
+
+def print_presets_table(presets: list[tuple[str, str, bool]]) -> None:
+    """Print a table of available presets.
+
+    Args:
+        presets: List of (name, description, is_builtin) tuples
+    """
+    table = Table(title="Available Presets", show_header=True, header_style="bold magenta")
+    table.add_column("Name", style="cyan")
+    table.add_column("Description")
+    table.add_column("Type")
+
+    for name, desc, is_builtin in presets:
+        preset_type = "[dim]built-in[/]" if is_builtin else "[green]user[/]"
+        table.add_row(name, desc, preset_type)
+
+    console.print(table)

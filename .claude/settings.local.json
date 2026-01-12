@@ -6,7 +6,13 @@
       "Bash(pytest:*)",
       "Bash(ruff check:*)",
       "Bash(mypy:*)",
-      "Bash(python -m pytest:*)"
+      "Bash(python -m pytest:*)",
+      "Bash(python -c:*)",
+      "Bash(ruff format:*)",
+      "Bash(pkill:*)",
+      "Bash(python -m mac_setup.cli:*)",
+      "Bash(python -m coverage run -m pytest:*)",
+      "Bash(python -m coverage:*)"
     ]
   }
 }
