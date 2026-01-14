@@ -8,7 +8,7 @@ from rich.console import Console
 
 from mac_setup import __version__, catalog
 from mac_setup.config import ensure_directories
-from mac_setup.installers import ApplicationScanner, HomebrewInstaller, MASInstaller, get_installer
+from mac_setup.installers import ApplicationScanner, HomebrewInstaller
 from mac_setup.installers.base import InstallResult, InstallStatus
 from mac_setup.models import InstalledPackage, InstallMethod, InstallSource, Package
 from mac_setup.presets import PresetManager, load_preset, save_preset
@@ -376,15 +376,13 @@ def run_status() -> None:
 
     # Sync detected packages
     homebrew = HomebrewInstaller()
-    mas = MASInstaller()
     scanner = ApplicationScanner()
 
     homebrew_installed = homebrew.list_installed() if homebrew.is_available() else []
-    mas_installed = mas.list_installed_ids() if mas.is_available() else []
 
     all_catalog_packages = [pkg for cat in catalog.get_all_categories() for pkg in cat.packages]
     sync_detected_packages(
-        state_manager, all_catalog_packages, homebrew_installed, mas_installed, homebrew, scanner
+        state_manager, all_catalog_packages, homebrew_installed, homebrew, scanner
     )
 
     mac_setup_pkgs = state_manager.get_mac_setup_packages()
@@ -546,7 +544,7 @@ def update(
         print_info("No tracked packages to update")
         raise typer.Exit(0)
 
-    # Get Homebrew packages only (MAS updates not supported via this tool)
+    # Get Homebrew packages
     homebrew_packages = _filter_homebrew_packages(all_installed)
 
     if not homebrew_packages:
@@ -799,16 +797,7 @@ def _run_installation(
         for pkg in to_install:
             progress.update(pkg.name)
 
-            get_installer(pkg.method)
-
-            if pkg.method == InstallMethod.MAS:
-                # MAS installation
-                from mac_setup.installers.mas import MASInstaller
-                mas_installer = MASInstaller()
-                result = mas_installer.install(pkg.id, mas_id=pkg.mas_id, dry_run=dry_run)
-            else:
-                # Homebrew installation
-                result = homebrew.install(pkg.id, pkg.method, dry_run=dry_run)
+            result = homebrew.install(pkg.id, pkg.method, dry_run=dry_run)
 
             results.append(result)
             progress.complete_package(result)
@@ -848,15 +837,7 @@ def _run_uninstallation(
         for pkg in packages:
             progress.update(pkg.name)
 
-            if pkg.method == InstallMethod.MAS:
-                # MAS uninstall not supported
-                result = InstallResult(
-                    package_id=pkg.id,
-                    status=InstallStatus.FAILED,
-                    message="App Store apps must be uninstalled manually",
-                )
-            else:
-                result = homebrew.uninstall(pkg.id, pkg.method, dry_run=dry_run, clean=clean)
+            result = homebrew.uninstall(pkg.id, pkg.method, dry_run=dry_run, clean=clean)
 
             results.append(result)
             progress.complete_package(result, cleaned=clean)

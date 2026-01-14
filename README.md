@@ -9,7 +9,6 @@ Interactive CLI tool for provisioning new macOS machines with curated software s
 - **Dry Run Mode** - Preview all changes before executing
 - **Progress Tracking** - Per-package and overall progress bars
 - **Idempotent** - Safe to re-run, skips already-installed packages
-- **Homebrew + Mac App Store** - Supports both via `brew` and `mas` CLI
 
 ## Requirements
 
@@ -22,21 +21,21 @@ Interactive CLI tool for provisioning new macOS machines with curated software s
 ### Install from GitHub
 
 ```bash
-pip install git+https://github.com/endelevium/mac-setup.git
+pip install git+https://github.com/mendelevium/mac-setup.git
 ```
 
-### Local Development Install
+### Local Install
 
 ```bash
-git clone https://github.com/endelevium/mac-setup.git
+git clone https://github.com/mendelevium/mac-setup.git
 cd mac-setup
-pip install -e ".[dev]"
+pip install -e .
 ```
 
-To install without development dependencies:
+To install development dependencies:
 
 ```bash
-pip install -e .
+pip install -e ".[dev]"
 ```
 
 ## Usage

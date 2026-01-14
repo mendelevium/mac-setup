@@ -28,7 +28,6 @@ class TestPackage:
         assert pkg.name == "Test Package"
         assert pkg.method == InstallMethod.CASK  # default
         assert pkg.default is False
-        assert pkg.mas_id is None
         assert pkg.requires == []
 
     def test_package_creation_full(self) -> None:
@@ -38,7 +37,6 @@ class TestPackage:
             name="Test Package",
             description="A test package",
             method=InstallMethod.FORMULA,
-            mas_id=None,
             default=True,
             requires=["dependency1", "dependency2"],
         )
@@ -46,18 +44,6 @@ class TestPackage:
         assert pkg.method == InstallMethod.FORMULA
         assert pkg.default is True
         assert pkg.requires == ["dependency1", "dependency2"]
-
-    def test_package_mas_app(self) -> None:
-        """Test creating a Mac App Store package."""
-        pkg = Package(
-            id="amphetamine",
-            name="Amphetamine",
-            description="Keep Mac awake",
-            method=InstallMethod.MAS,
-            mas_id=937984704,
-        )
-        assert pkg.method == InstallMethod.MAS
-        assert pkg.mas_id == 937984704
 
     def test_package_missing_required_fields(self) -> None:
         """Test that missing required fields raise ValidationError."""
@@ -253,7 +239,6 @@ class TestInstallMethod:
         """Test install method enum values."""
         assert InstallMethod.FORMULA.value == "formula"
         assert InstallMethod.CASK.value == "cask"
-        assert InstallMethod.MAS.value == "mas"
 
     def test_install_method_string_comparison(self) -> None:
         """Test that enum values can be compared with strings."""

@@ -25,7 +25,6 @@ def _load_catalog() -> list[Category]:
                 name=pkg["name"],
                 description=pkg["description"],
                 method=InstallMethod(pkg.get("method", "cask")),
-                mas_id=pkg.get("mas_id"),
                 app_name=pkg.get("app_name"),
                 default=pkg.get("default", False),
                 requires=pkg.get("requires", []),

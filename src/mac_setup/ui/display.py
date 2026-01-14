@@ -77,14 +77,12 @@ def print_category_table(categories: list[Category], selected: set[str] | None =
 
 def print_package_table(
     category: Category,
-    selected: set[str] | None = None,
     installed: set[str] | None = None,
 ) -> None:
     """Print a table of packages in a category.
 
     Args:
         category: The category to display
-        selected: Set of selected package IDs (optional)
         installed: Set of installed package IDs (optional)
     """
     table = Table(
@@ -92,16 +90,13 @@ def print_package_table(
         show_header=True,
         header_style="bold magenta",
     )
-    table.add_column("", width=3)
+    table.add_column("Type", width=7)
     table.add_column("Package", style="cyan")
     table.add_column("Description")
     table.add_column("Status", justify="right")
 
     for pkg in category.packages:
-        is_selected = selected and pkg.id in selected
         is_installed = installed and pkg.id in installed
-
-        check = "[green]✓[/]" if is_selected else " "
 
         if is_installed:
             status = "[green]installed[/]"
@@ -110,7 +105,7 @@ def print_package_table(
         else:
             status = ""
 
-        table.add_row(check, pkg.name, pkg.description, status)
+        table.add_row(pkg.method.value, pkg.name, pkg.description, status)
 
     console.print(table)
 

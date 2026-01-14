@@ -59,13 +59,6 @@ class TestCatalogStructure:
                 assert pkg.id not in seen_ids, f"Duplicate package ID: {pkg.id}"
                 seen_ids.add(pkg.id)
 
-    def test_mas_packages_have_mas_id(self) -> None:
-        """Test that MAS packages have mas_id set."""
-        for category in catalog.get_all_categories():
-            for pkg in category.packages:
-                if pkg.method == InstallMethod.MAS:
-                    assert pkg.mas_id is not None, f"MAS package {pkg.id} missing mas_id"
-
 
 class TestCatalogLookup:
     """Tests for catalog lookup functions."""
@@ -100,14 +93,6 @@ class TestCatalogLookup:
         pkg = catalog.get_package("git")
         assert pkg is not None
         assert pkg.method == InstallMethod.FORMULA
-
-    def test_get_package_mas(self) -> None:
-        """Test getting a Mac App Store package."""
-        pkg = catalog.get_package("amphetamine")
-        assert pkg is not None
-        assert pkg.method == InstallMethod.MAS
-        assert pkg.mas_id == 937984704
-
 
 class TestDefaultPackages:
     """Tests for default package selection."""
@@ -211,19 +196,16 @@ class TestPackageCounts:
         """Test getting packages by installation method."""
         formulas = catalog.get_packages_by_method(InstallMethod.FORMULA)
         casks = catalog.get_packages_by_method(InstallMethod.CASK)
-        mas_apps = catalog.get_packages_by_method(InstallMethod.MAS)
 
         # Verify all returned packages have the correct method
         for pkg in formulas:
             assert pkg.method == InstallMethod.FORMULA
         for pkg in casks:
             assert pkg.method == InstallMethod.CASK
-        for pkg in mas_apps:
-            assert pkg.method == InstallMethod.MAS
 
         # Total should match
         total = catalog.get_total_package_count()
-        assert len(formulas) + len(casks) + len(mas_apps) == total
+        assert len(formulas) + len(casks) == total
 
 
 class TestSpecificCategories:

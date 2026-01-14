@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from mac_setup.installers import HomebrewInstaller, MASInstaller, get_installer
+from mac_setup.installers import HomebrewInstaller, get_installer
 from mac_setup.installers.base import InstallResult, InstallStatus
 from mac_setup.models import InstallMethod
 
@@ -55,11 +55,6 @@ class TestGetInstaller:
         """Test getting installer for cask method."""
         installer = get_installer(InstallMethod.CASK)
         assert isinstance(installer, HomebrewInstaller)
-
-    def test_get_installer_mas(self) -> None:
-        """Test getting installer for MAS method."""
-        installer = get_installer(InstallMethod.MAS)
-        assert isinstance(installer, MASInstaller)
 
 
 class TestHomebrewInstaller:
@@ -267,163 +262,3 @@ class TestHomebrewInstaller:
         installer = HomebrewInstaller()
         assert installer.is_installed("python@3.12", InstallMethod.FORMULA) is True
         assert installer.is_installed("python", InstallMethod.FORMULA) is True
-
-
-class TestMASInstaller:
-    """Tests for MASInstaller."""
-
-    @patch("shutil.which")
-    def test_is_available_when_mas_exists(self, mock_which: MagicMock) -> None:
-        """Test is_available returns True when mas is found."""
-        mock_which.return_value = "/opt/homebrew/bin/mas"
-        installer = MASInstaller()
-        assert installer.is_available() is True
-
-    @patch("shutil.which")
-    def test_is_available_when_mas_missing(self, mock_which: MagicMock) -> None:
-        """Test is_available returns False when mas is not found."""
-        mock_which.return_value = None
-        installer = MASInstaller()
-        assert installer.is_available() is False
-
-    @patch("shutil.which")
-    @patch("subprocess.run")
-    def test_is_installed(
-        self, mock_run: MagicMock, mock_which: MagicMock
-    ) -> None:
-        """Test checking if a MAS app is installed."""
-        mock_which.return_value = "/opt/homebrew/bin/mas"
-        mock_run.return_value = MagicMock(
-            returncode=0,
-            stdout="937984704 Amphetamine (5.3.1)\n123456789 Another App (1.0)\n",
-        )
-
-        installer = MASInstaller()
-        assert installer.is_installed("amphetamine", mas_id=937984704) is True
-        assert installer.is_installed("other", mas_id=999999999) is False
-
-    @patch("shutil.which")
-    @patch("subprocess.run")
-    def test_install_dry_run(
-        self, mock_run: MagicMock, mock_which: MagicMock
-    ) -> None:
-        """Test that dry run doesn't actually install."""
-        mock_which.return_value = "/opt/homebrew/bin/mas"
-        mock_run.return_value = MagicMock(returncode=0, stdout="")
-
-        installer = MASInstaller()
-        result = installer.install("test-app", mas_id=123456, dry_run=True)
-
-        assert result.status == InstallStatus.SKIPPED
-        assert "dry run" in result.message.lower()
-
-    @patch("shutil.which")
-    @patch("subprocess.run")
-    def test_install_already_installed(
-        self, mock_run: MagicMock, mock_which: MagicMock
-    ) -> None:
-        """Test installing an already installed app."""
-        mock_which.return_value = "/opt/homebrew/bin/mas"
-        mock_run.return_value = MagicMock(
-            returncode=0,
-            stdout="123456 Test App (1.0)\n",
-        )
-
-        installer = MASInstaller()
-        result = installer.install("test-app", mas_id=123456)
-
-        assert result.status == InstallStatus.ALREADY_INSTALLED
-
-    @patch("shutil.which")
-    @patch("subprocess.run")
-    def test_install_success(
-        self, mock_run: MagicMock, mock_which: MagicMock
-    ) -> None:
-        """Test successful installation."""
-        mock_which.return_value = "/opt/homebrew/bin/mas"
-
-        mock_run.side_effect = [
-            MagicMock(returncode=0, stdout=""),  # list (not installed)
-            MagicMock(returncode=0, stdout=""),  # install
-        ]
-
-        installer = MASInstaller()
-        result = installer.install("new-app", mas_id=123456)
-
-        assert result.status == InstallStatus.SUCCESS
-
-    @patch("shutil.which")
-    def test_install_mas_not_available(self, mock_which: MagicMock) -> None:
-        """Test installation when mas is not available."""
-        mock_which.return_value = None
-
-        installer = MASInstaller()
-        result = installer.install("test-app", mas_id=123456)
-
-        assert result.status == InstallStatus.FAILED
-        assert "mas-cli" in result.message.lower()
-
-    @patch("shutil.which")
-    def test_install_no_mas_id(self, mock_which: MagicMock) -> None:
-        """Test installation without mas_id."""
-        mock_which.return_value = "/opt/homebrew/bin/mas"
-
-        installer = MASInstaller()
-        result = installer.install("test-app", mas_id=None)
-
-        assert result.status == InstallStatus.FAILED
-        assert "no mac app store id" in result.message.lower()
-
-    @patch("shutil.which")
-    @patch("subprocess.run")
-    def test_uninstall_not_supported(
-        self, mock_run: MagicMock, mock_which: MagicMock
-    ) -> None:
-        """Test that uninstall returns appropriate message."""
-        mock_which.return_value = "/opt/homebrew/bin/mas"
-        mock_run.return_value = MagicMock(
-            returncode=0,
-            stdout="123456 Test App (1.0)\n",
-        )
-
-        installer = MASInstaller()
-        result = installer.uninstall("test-app", mas_id=123456)
-
-        assert result.status == InstallStatus.FAILED
-        assert "manually" in result.message.lower()
-
-    @patch("shutil.which")
-    @patch("subprocess.run")
-    def test_list_installed(
-        self, mock_run: MagicMock, mock_which: MagicMock
-    ) -> None:
-        """Test listing installed MAS apps."""
-        mock_which.return_value = "/opt/homebrew/bin/mas"
-        mock_run.return_value = MagicMock(
-            returncode=0,
-            stdout="937984704 Amphetamine (5.3.1)\n123456789 Test App (1.0)\n",
-        )
-
-        installer = MASInstaller()
-        installed = installer.list_installed()
-
-        assert "Amphetamine" in installed
-        assert "Test App" in installed
-
-    @patch("shutil.which")
-    @patch("subprocess.run")
-    def test_list_installed_ids(
-        self, mock_run: MagicMock, mock_which: MagicMock
-    ) -> None:
-        """Test listing installed MAS app IDs."""
-        mock_which.return_value = "/opt/homebrew/bin/mas"
-        mock_run.return_value = MagicMock(
-            returncode=0,
-            stdout="937984704 Amphetamine (5.3.1)\n123456789 Test App (1.0)\n",
-        )
-
-        installer = MASInstaller()
-        installed_ids = installer.list_installed_ids()
-
-        assert 937984704 in installed_ids
-        assert 123456789 in installed_ids

@@ -506,11 +506,11 @@ categories:
         description: Free screenshot tool with annotations
         method: cask
         app_name: Shottr
-      - id: amphetamine
-        name: Amphetamine
+      - id: caffeine
+        name: Caffeine
         description: Keep Mac awake
-        method: mas
-        mas_id: 937984704
+        method: cask
+        app_name: Caffeine
 
   # ===========================================================================
   # Communication

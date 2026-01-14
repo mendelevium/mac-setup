@@ -7,7 +7,6 @@ from unittest.mock import MagicMock, patch
 from mac_setup.installers import get_installer
 from mac_setup.installers.base import InstallResult, InstallStatus
 from mac_setup.installers.homebrew import HomebrewInstaller
-from mac_setup.installers.mas import MASInstaller
 from mac_setup.installers.scanner import ApplicationScanner
 from mac_setup.models import InstallMethod
 
@@ -184,114 +183,6 @@ class TestHomebrewInstallerExtended:
         assert isinstance(paths, list)
 
 
-class TestMASInstallerExtended:
-    """Extended tests for MASInstaller."""
-
-    @patch("subprocess.run")
-    def test_list_installed(self, mock_run: MagicMock) -> None:
-        """Test list_installed returns app names."""
-        mock_run.return_value = MagicMock(
-            returncode=0,
-            stdout="123456 App One (1.0)\n789012 App Two (2.0)\n",
-        )
-        installer = MASInstaller()
-        with patch.object(installer, "_mas_path", "/usr/local/bin/mas"):
-            result = installer.list_installed()
-            assert len(result) >= 0
-
-    @patch("subprocess.run")
-    def test_list_installed_ids(self, mock_run: MagicMock) -> None:
-        """Test list_installed_ids returns IDs."""
-        mock_run.return_value = MagicMock(
-            returncode=0,
-            stdout="123456 App One (1.0)\n789012 App Two (2.0)\n",
-        )
-        installer = MASInstaller()
-        with patch.object(installer, "_mas_path", "/usr/local/bin/mas"):
-            result = installer.list_installed_ids()
-            assert 123456 in result
-            assert 789012 in result
-
-    @patch("subprocess.run")
-    def test_list_installed_ids_empty(self, mock_run: MagicMock) -> None:
-        """Test list_installed_ids returns empty on failure."""
-        mock_run.return_value = MagicMock(returncode=1, stdout="")
-        installer = MASInstaller()
-        with patch.object(installer, "_mas_path", "/usr/local/bin/mas"):
-            result = installer.list_installed_ids()
-            assert result == []
-
-    def test_uninstall_not_installed(self) -> None:
-        """Test uninstall returns skipped when app not installed."""
-        installer = MASInstaller()
-        with patch.object(installer, "_mas_path", "/usr/local/bin/mas"):
-            with patch.object(installer, "is_installed", return_value=False):
-                result = installer.uninstall("app", mas_id=123456)
-                assert result.status == InstallStatus.SKIPPED
-                assert "not installed" in result.message.lower()
-
-    def test_uninstall_manual_required(self) -> None:
-        """Test uninstall returns failed with manual instructions for installed apps."""
-        installer = MASInstaller()
-        with patch.object(installer, "_mas_path", "/usr/local/bin/mas"):
-            with patch.object(installer, "is_installed", return_value=True):
-                result = installer.uninstall("app", mas_id=123456)
-                assert result.status == InstallStatus.FAILED
-                assert "manually" in result.message.lower()
-
-    @patch("subprocess.run")
-    def test_install_success(self, mock_run: MagicMock) -> None:
-        """Test successful MAS app installation."""
-        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
-        installer = MASInstaller()
-        with patch.object(installer, "_mas_path", "/usr/local/bin/mas"):
-            with patch.object(installer, "is_installed", return_value=False):
-                result = installer.install("xcode", mas_id=497799835)
-                assert result.status == InstallStatus.SUCCESS
-
-    @patch("subprocess.run")
-    def test_install_already_installed(self, mock_run: MagicMock) -> None:
-        """Test install when MAS app already installed."""
-        installer = MASInstaller()
-        with patch.object(installer, "_mas_path", "/usr/local/bin/mas"):
-            with patch.object(installer, "is_installed", return_value=True):
-                result = installer.install("xcode", mas_id=497799835)
-                assert result.status == InstallStatus.ALREADY_INSTALLED
-
-    @patch("subprocess.run")
-    def test_install_failure(self, mock_run: MagicMock) -> None:
-        """Test MAS install failure."""
-        mock_run.return_value = MagicMock(returncode=1, stdout="", stderr="Error")
-        installer = MASInstaller()
-        with patch.object(installer, "_mas_path", "/usr/local/bin/mas"):
-            with patch.object(installer, "is_installed", return_value=False):
-                result = installer.install("badapp", mas_id=123456)
-                assert result.status == InstallStatus.FAILED
-
-    def test_install_dry_run(self) -> None:
-        """Test MAS install dry run."""
-        installer = MASInstaller()
-        with patch.object(installer, "_mas_path", "/usr/local/bin/mas"):
-            with patch.object(installer, "is_installed", return_value=False):
-                result = installer.install("xcode", mas_id=497799835, dry_run=True)
-                assert result.status == InstallStatus.SKIPPED
-
-    def test_install_no_mas_id(self) -> None:
-        """Test install without MAS ID fails."""
-        installer = MASInstaller()
-        with patch.object(installer, "_mas_path", "/usr/local/bin/mas"):
-            result = installer.install("xcode", mas_id=None)
-            assert result.status == InstallStatus.FAILED
-
-    def test_get_version_returns_none(self) -> None:
-        """Test get_version returns None (not implemented yet)."""
-        installer = MASInstaller()
-        with patch.object(installer, "_mas_path", "/usr/local/bin/mas"):
-            # MAS get_version currently always returns None
-            version = installer.get_version("xcode", mas_id=497799835)
-            assert version is None
-
-
 class TestApplicationScanner:
     """Tests for ApplicationScanner."""
 
@@ -355,11 +246,6 @@ class TestGetInstallerExtended:
         """Test get_installer returns HomebrewInstaller for cask."""
         installer = get_installer(InstallMethod.CASK)
         assert isinstance(installer, HomebrewInstaller)
-
-    def test_get_installer_mas(self) -> None:
-        """Test get_installer returns MASInstaller for mas."""
-        installer = get_installer(InstallMethod.MAS)
-        assert isinstance(installer, MASInstaller)
 
 
 class TestInstallResultExtended:

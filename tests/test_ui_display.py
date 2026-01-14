@@ -148,6 +148,9 @@ class TestPrintPackageTable:
         assert "Package 1" in result
         assert "Package 2" in result
         assert "default" in result
+        assert "Type" in result
+        assert "formula" in result
+        assert "cask" in result
 
     def test_print_package_table_with_installed(self) -> None:
         """Test package table showing installed packages."""
@@ -168,26 +171,6 @@ class TestPrintPackageTable:
             print_package_table(category, installed={"pkg1"})
         result = output.getvalue()
         assert "installed" in result
-
-    def test_print_package_table_with_selection(self) -> None:
-        """Test package table with selected packages."""
-        category = Category(
-            id="test",
-            name="Test",
-            description="Test",
-            packages=[
-                Package(
-                    id="pkg1", name="Package 1", description="Desc",
-                    method=InstallMethod.FORMULA
-                ),
-            ],
-        )
-        output = StringIO()
-        console = Console(file=output, force_terminal=True)
-        with patch("mac_setup.ui.display.console", console):
-            print_package_table(category, selected={"pkg1"})
-        result = output.getvalue()
-        assert "✓" in result
 
 
 class TestPrintInstalledPackages:

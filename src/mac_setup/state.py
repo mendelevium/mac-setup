@@ -147,7 +147,6 @@ class StateManager:
 def _is_package_installed(
     pkg: Package,
     homebrew_set: set[str],
-    mas_installed: list[int],
     installed_apps: set[str],
 ) -> bool:
     """Check if a package is installed on the system.
@@ -155,15 +154,11 @@ def _is_package_installed(
     Args:
         pkg: Package to check
         homebrew_set: Set of installed Homebrew package IDs
-        mas_installed: List of installed Mac App Store app IDs
         installed_apps: Set of app names in /Applications
 
     Returns:
         True if package is installed, False otherwise
     """
-    if pkg.method == InstallMethod.MAS:
-        return bool(pkg.mas_id and pkg.mas_id in mas_installed)
-
     # Homebrew formula or cask - check direct match
     if pkg.id in homebrew_set:
         return True
@@ -182,7 +177,6 @@ def _is_package_installed(
 def detect_installed_packages(
     catalog_packages: list[Package],
     homebrew_installed: list[str],
-    mas_installed: list[int],
     homebrew: HomebrewInstaller | None = None,
     scanner: ApplicationScanner | None = None,
 ) -> list[InstalledPackage]:
@@ -191,7 +185,6 @@ def detect_installed_packages(
     Args:
         catalog_packages: List of packages from the catalog
         homebrew_installed: List of installed Homebrew package IDs
-        mas_installed: List of installed Mac App Store app IDs
         homebrew: Optional HomebrewInstaller for fetching versions
         scanner: Optional ApplicationScanner for detecting /Applications apps
 
@@ -205,7 +198,7 @@ def detect_installed_packages(
     installed_apps = scanner.list_installed_apps() if scanner else set()
 
     for pkg in catalog_packages:
-        if _is_package_installed(pkg, homebrew_set, mas_installed, installed_apps):
+        if _is_package_installed(pkg, homebrew_set, installed_apps):
             installed.append(
                 InstalledPackage(
                     id=pkg.id,
@@ -235,7 +228,6 @@ def sync_detected_packages(
     state_manager: StateManager,
     catalog_packages: list[Package],
     homebrew_installed: list[str],
-    mas_installed: list[int],
     homebrew: HomebrewInstaller | None = None,
     scanner: ApplicationScanner | None = None,
 ) -> list[InstalledPackage]:
@@ -249,7 +241,6 @@ def sync_detected_packages(
         state_manager: The state manager instance
         catalog_packages: List of packages from the catalog
         homebrew_installed: List of installed Homebrew package IDs
-        mas_installed: List of installed Mac App Store app IDs
         homebrew: Optional HomebrewInstaller for fetching versions
         scanner: Optional ApplicationScanner for detecting /Applications apps
 
@@ -257,7 +248,7 @@ def sync_detected_packages(
         List of newly detected packages
     """
     detected = detect_installed_packages(
-        catalog_packages, homebrew_installed, mas_installed, homebrew, scanner
+        catalog_packages, homebrew_installed, homebrew, scanner
     )
     detected_ids = {pkg.id for pkg in detected}
     {pkg.id: pkg for pkg in detected}

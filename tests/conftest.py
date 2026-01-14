@@ -41,19 +41,6 @@ def sample_formula_package() -> Package:
 
 
 @pytest.fixture
-def sample_mas_package() -> Package:
-    """Create a sample Mac App Store package for testing."""
-    return Package(
-        id="test-mas-app",
-        name="Test MAS App",
-        description="A test Mac App Store app",
-        method=InstallMethod.MAS,
-        mas_id=123456789,
-        default=False,
-    )
-
-
-@pytest.fixture
 def sample_category(sample_package: Package, sample_formula_package: Package) -> Category:
     """Create a sample category with packages for testing."""
     return Category(

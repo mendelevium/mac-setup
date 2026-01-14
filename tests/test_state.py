@@ -205,7 +205,7 @@ class TestDetectInstalledPackages:
         ]
         homebrew_installed = ["google-chrome", "iterm2"]
 
-        detected = detect_installed_packages(catalog, homebrew_installed, [])
+        detected = detect_installed_packages(catalog, homebrew_installed)
 
         assert len(detected) == 1
         assert detected[0].id == "google-chrome"
@@ -224,7 +224,7 @@ class TestDetectInstalledPackages:
         ]
         homebrew_installed = ["git", "fd"]
 
-        detected = detect_installed_packages(catalog, homebrew_installed, [])
+        detected = detect_installed_packages(catalog, homebrew_installed)
 
         assert len(detected) == 1
         assert detected[0].id == "git"
@@ -240,48 +240,22 @@ class TestDetectInstalledPackages:
         # Homebrew might list it with or without version
         homebrew_installed = ["python@3.12"]
 
-        detected = detect_installed_packages(catalog, homebrew_installed, [])
+        detected = detect_installed_packages(catalog, homebrew_installed)
 
         assert len(detected) == 1
         assert detected[0].id == "python@3.12"
-
-    def test_detect_mas_app(self) -> None:
-        """Test detecting Mac App Store apps."""
-        catalog = [
-            Package(
-                id="amphetamine",
-                name="Amphetamine",
-                description="Keep awake",
-                method=InstallMethod.MAS,
-                mas_id=937984704,
-            ),
-        ]
-        mas_installed = [937984704]
-
-        detected = detect_installed_packages(catalog, [], mas_installed)
-
-        assert len(detected) == 1
-        assert detected[0].id == "amphetamine"
 
     def test_detect_mixed_sources(self) -> None:
         """Test detecting packages from multiple sources."""
         catalog = [
             Package(id="chrome", name="Chrome", description="Browser", method=InstallMethod.CASK),
             Package(id="git", name="Git", description="VCS", method=InstallMethod.FORMULA),
-            Package(
-                id="amphetamine",
-                name="Amphetamine",
-                description="Keep awake",
-                method=InstallMethod.MAS,
-                mas_id=937984704,
-            ),
         ]
         homebrew_installed = ["chrome", "git"]
-        mas_installed = [937984704]
 
-        detected = detect_installed_packages(catalog, homebrew_installed, mas_installed)
+        detected = detect_installed_packages(catalog, homebrew_installed)
 
-        assert len(detected) == 3
+        assert len(detected) == 2
 
 
 class TestSyncDetectedPackages:
@@ -296,7 +270,7 @@ class TestSyncDetectedPackages:
             Package(id="chrome", name="Chrome", description="Browser", method=InstallMethod.CASK),
         ]
 
-        newly_detected = sync_detected_packages(manager, catalog, ["chrome"], [])
+        newly_detected = sync_detected_packages(manager, catalog, ["chrome"])
 
         assert len(newly_detected) == 1
         assert newly_detected[0].id == "chrome"
@@ -314,7 +288,7 @@ class TestSyncDetectedPackages:
         catalog = [pkg]
 
         # Now sync - should not change source
-        newly_detected = sync_detected_packages(manager, catalog, ["chrome"], [])
+        newly_detected = sync_detected_packages(manager, catalog, ["chrome"])
 
         assert len(newly_detected) == 0
         installed = manager.get_installed_package("chrome")
@@ -331,7 +305,7 @@ class TestSyncDetectedPackages:
         ]
 
         # Sync twice
-        sync_detected_packages(manager, catalog, ["chrome"], [])
-        sync_detected_packages(manager, catalog, ["chrome"], [])
+        sync_detected_packages(manager, catalog, ["chrome"])
+        sync_detected_packages(manager, catalog, ["chrome"])
 
         assert len(manager.get_all_installed()) == 1

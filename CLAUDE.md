@@ -33,11 +33,10 @@ mypy src                            # Type check
 
 ### Core Data Flow
 
-1. **Catalog** (`catalog.py`) - Static registry of all packages organized by category. Each `Package` has an `InstallMethod` (FORMULA, CASK, MAS) determining which installer handles it.
+1. **Catalog** (`catalog.py`) - Static registry of all packages organized by category. Each `Package` has an `InstallMethod` (FORMULA or CASK) determining which installer handles it.
 
 2. **Installers** (`installers/`) - Abstract `Installer` base class with implementations:
    - `HomebrewInstaller` - Handles both formulas and casks via `brew` CLI
-   - `MASInstaller` - Mac App Store apps via `mas` CLI
    - Factory function `get_installer()` returns the correct installer for a method
 
 3. **State Management** (`state.py`) - Tracks installed packages in `~/.config/mac-setup/state.json`. Distinguishes between packages installed via mac-setup (`MAC_SETUP`) and externally installed packages (`DETECTED`).
@@ -46,7 +45,7 @@ mypy src                            # Type check
 
 ### Key Models (`models.py`)
 
-- `Package` - Single installable item with id, name, method, optional mas_id
+- `Package` - Single installable item with id, name, method
 - `Category` - Group of related packages
 - `Preset` - Saved configuration mapping category IDs to package ID lists
 - `InstalledPackage` - State record with install source and timestamp

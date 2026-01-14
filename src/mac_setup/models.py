@@ -11,7 +11,6 @@ class InstallMethod(str, Enum):
 
     FORMULA = "formula"  # Homebrew formula (CLI tools)
     CASK = "cask"  # Homebrew cask (GUI apps)
-    MAS = "mas"  # Mac App Store
 
 
 class Package(BaseModel):
@@ -21,7 +20,6 @@ class Package(BaseModel):
     name: str = Field(..., description="Human-readable display name")
     description: str = Field(..., description="One-line description")
     method: InstallMethod = Field(default=InstallMethod.CASK, description="Installation method")
-    mas_id: int | None = Field(default=None, description="Mac App Store ID for MAS apps")
     app_name: str | None = Field(
         default=None, description="App name in /Applications (e.g., 'Visual Studio Code')"
     )

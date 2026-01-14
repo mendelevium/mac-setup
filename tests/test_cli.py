@@ -65,12 +65,10 @@ class TestStatusCommand:
     """Tests for status command."""
 
     @patch("mac_setup.cli.HomebrewInstaller")
-    @patch("mac_setup.cli.MASInstaller")
     @patch("mac_setup.cli.StateManager")
     def test_status_shows_packages(
         self,
         mock_state: MagicMock,
-        mock_mas: MagicMock,
         mock_homebrew: MagicMock,
     ) -> None:
         """Test status command shows packages."""
@@ -79,11 +77,6 @@ class TestStatusCommand:
         mock_homebrew_instance.is_available.return_value = True
         mock_homebrew_instance.list_installed.return_value = []
         mock_homebrew.return_value = mock_homebrew_instance
-
-        mock_mas_instance = MagicMock()
-        mock_mas_instance.is_available.return_value = True
-        mock_mas_instance.list_installed_ids.return_value = []
-        mock_mas.return_value = mock_mas_instance
 
         mock_state_instance = MagicMock()
         mock_state_instance.get_mac_setup_packages.return_value = []
